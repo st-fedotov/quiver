@@ -718,7 +718,7 @@ class ComplexNumbers(Field):
             Tuple of (reduced matrix, number of pivots found)
         """
         if not matrix.ndim == 2:
-            raise ValueError(f"Only 2-D matrices can be converted to reduced row echelon form, not {matrix_GF.ndim}-D.")
+            raise ValueError(f"Only 2-D matrices can be converted to reduced row echelon form, not {matrix.ndim}-D.")
 
         ncols = matrix.shape[1]
 
@@ -867,17 +867,15 @@ class ComplexNumbers(Field):
         if with_express and with_extend:
             raise ValueError("with_express and with_extend cannot both be True")
 
-        # Ensure the matrix is in the correct field
-        matrix_GF = self.GF(matrix) if not isinstance(matrix, self.GF) else matrix
 
         # Get dimensions
-        m, n = matrix_GF.shape  # m×n matrix
+        m, n = matrix.shape  # m×n matrix
 
         if not (do_express or with_express) or with_extend: # Which means, do_extend, or with_extend, or nothing
             # To get a basis for the column space, we use the fact that the pivot rows
             # in the RREF of A^T correspond to the pivot columns of A.
 
-            rref_transpose, pivot_count = self.row_reduce(matrix_GF.T)
+            rref_transpose, pivot_count = self.row_reduce(matrix.T)
             # rref_transpose is of shape (n, m) (rows of A^T)
             pivot_cols = []
 
@@ -917,7 +915,7 @@ class ComplexNumbers(Field):
 
         else:  # do_express
             # Calculate the RREF of the original matrix.
-            rref, pivot_count = self.row_reduce(matrix_GF)
+            rref, pivot_count = self.row_reduce(matrix)
 
             # Find pivot columns from the RREF. We assume that pivot_count gives the number of nonzero rows.
             pivot_columns = []
@@ -934,14 +932,14 @@ class ComplexNumbers(Field):
             non_pivot_columns = [j for j in range(n) if j not in pivot_columns]
 
             # Extract the corresponding original columns to form the basis.
-            basis = matrix_GF[:, pivot_columns]
+            basis = matrix[:, pivot_columns]
 
             if not do_express:
                 # Just return the basis for the column space.
                 return basis
             else:
                 # Also return expressions for non-basis columns.
-                non_basis = matrix_GF[:, non_pivot_columns]
+                non_basis = matrix[:, non_pivot_columns]
 
                 # The expressions come from the RREF: for each non-pivot column, express it in terms of pivot columns.
                 expressions = self.GF.Zeros((len(pivot_columns), len(non_pivot_columns)))
