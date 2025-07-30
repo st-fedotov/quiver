@@ -9,7 +9,7 @@ class Morphism:
     Maps between vector spaces that commute with the quiver structure.
     """
 
-    def __init__(self, source: "Module", target: "Module", name: str = "", maps: Optional[Dict[int, Union[np.ndarray, List[List[int]], None]]] = None):
+    def __init__(self, source: 'Module', target: 'Module', name: str = "", maps: Optional[Dict[int, Union[np.ndarray, List[List[int]], None]]] = None):
         """
         Initialize a morphism between two modules.
 
@@ -267,7 +267,7 @@ class Morphism:
 
         return result
 
-    def kernel(self) -> Tuple[Module, 'Morphism']:
+    def kernel(self) -> Tuple['Module', 'Morphism']:
         """
         Compute the kernel of the morphism.
 
@@ -393,7 +393,7 @@ class Morphism:
 
         return (kernel_module, inclusion)
 
-    def image(self) -> Tuple[Module, 'Morphism', 'Morphism']:
+    def image(self) -> Tuple['Module', 'Morphism', 'Morphism']:
         """
         Compute the image of the morphism.
 
@@ -533,7 +533,7 @@ class Morphism:
 
         return (image_module, inclusion, projection)
 
-    def cokernel(self) -> Tuple[Module, 'Morphism']:
+    def cokernel(self) -> Tuple['Module', 'Morphism']:
         """
         Compute the cokernel of the morphism.
 
@@ -890,7 +890,7 @@ class Morphism:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict, source: "Module", target: "Module") -> 'Morphism':
+    def from_dict(cls, data: Dict, source: 'Module', target: 'Module') -> 'Morphism':
         """
         Create a morphism from a dictionary.
 
@@ -921,7 +921,7 @@ class Morphism:
             json.dump(self.to_dict(), f, indent=2)
 
     @classmethod
-    def load(cls, filename: str, source: "Module", target: "Module") -> 'Morphism':
+    def load(cls, filename: str, source: 'Module', target: 'Module') -> 'Morphism':
         """
         Load a morphism from a JSON file.
 
