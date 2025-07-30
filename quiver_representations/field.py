@@ -685,7 +685,7 @@ class ComplexNumbers(Field):
         Raises:
             ValueError: If input is not a 2D matrix
         """
-        return numpy.linalg.matrix_rank(matrix)
+        return np.linalg.matrix_rank(matrix)
 
     def kernel_basis(self, matrix: np.ndarray) -> np.ndarray:
         """
