@@ -9,7 +9,7 @@ class Morphism:
     Maps between vector spaces that commute with the quiver structure.
     """
 
-    def __init__(self, source: Module, target: Module, name: str = "", maps: Optional[Dict[int, Union[np.ndarray, List[List[int]], None]]] = None):
+    def __init__(self, source: "Module", target: "Module", name: str = "", maps: Optional[Dict[int, Union[np.ndarray, List[List[int]], None]]] = None):
         """
         Initialize a morphism between two modules.
 
@@ -890,7 +890,7 @@ class Morphism:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict, source: Module, target: Module) -> 'Morphism':
+    def from_dict(cls, data: Dict, source: "Module", target: "Module") -> 'Morphism':
         """
         Create a morphism from a dictionary.
 
@@ -921,7 +921,7 @@ class Morphism:
             json.dump(self.to_dict(), f, indent=2)
 
     @classmethod
-    def load(cls, filename: str, source: Module, target: Module) -> 'Morphism':
+    def load(cls, filename: str, source: "Module", target: "Module") -> 'Morphism':
         """
         Load a morphism from a JSON file.
 
