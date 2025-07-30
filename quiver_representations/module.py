@@ -3,6 +3,10 @@ from typing import Dict, List, Tuple, Union, Optional, Any
 import copy
 import json
 
+from .field import Field
+from .quiver import Quiver
+from .morphism import Morphism
+
 class Module:
     """
     A class representing a representation of a quiver (also called a module).
