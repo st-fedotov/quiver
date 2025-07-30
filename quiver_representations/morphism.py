@@ -3,6 +3,10 @@ from typing import Dict, List, Tuple, Union, Optional, Any
 import json
 import copy
 
+from .field import FiniteField, ComplexNumbers
+from .quiver import Quiver
+from .module import Module
+
 class Morphism:
     """
     A class representing a morphism between two quiver representations.
