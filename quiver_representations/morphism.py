@@ -3,7 +3,7 @@ from typing import Dict, List, Tuple, Union, Optional, Any
 import json
 import copy
 
-from .field import FiniteField, ComplexNumbers
+from .field import Field
 from .quiver import Quiver
 from .module import Module
 
