@@ -243,17 +243,22 @@ class Module:
         return [v for v, dim in self.spaces.items() if dim > 0]
 
     @classmethod
-    def direct_sum(cls, module1: 'Module', module2: 'Module') -> 'Module':
+    def direct_sum(cls, module1: 'Module', module2: 'Module') -> Tuple['Module', 'Morphism', 'Morphism', 'Morphism', 'Morphism']:
         """
-        Compute the direct sum of two modules.
-
+        Compute the direct sum of two modules with canonical morphisms.
+        
         Args:
             module1: First module
             module2: Second module
-
+            
         Returns:
-            A new module representing the direct sum
-
+            A tuple (M, i1, i2, p1, p2) where:
+            - M is the direct sum module M1 ⊕ M2
+            - i1: M1 → M is the first inclusion
+            - i2: M2 → M is the second inclusion  
+            - p1: M → M1 is the first projection
+            - p2: M → M2 is the second projection
+            
         Raises:
             ValueError: If modules are over different quivers or fields
         """
@@ -314,11 +319,66 @@ class Module:
 
             maps[arrow_id] = result_map
 
-        # Create the module with dimensions and maps
-        return cls(quiver, field,
-                     name=f"({module1.name})⊕({module2.name})",
-                     dimensions=dimensions,
-                     maps=maps)
+        # Create the direct sum module
+        direct_sum_module = cls(quiver, field,
+                                name=f"({module1.name})⊕({module2.name})",
+                                dimensions=dimensions,
+                                maps=maps)
+
+        # Create the canonical inclusion morphisms
+        # i1: M1 → M1 ⊕ M2
+        inclusion1 = Morphism(module1, direct_sum_module, name=f"i1: {module1.name} → {direct_sum_module.name}")
+        
+        # i2: M2 → M1 ⊕ M2  
+        inclusion2 = Morphism(module2, direct_sum_module, name=f"i2: {module2.name} → {direct_sum_module.name}")
+        
+        # p1: M1 ⊕ M2 → M1
+        projection1 = Morphism(direct_sum_module, module1, name=f"p1: {direct_sum_module.name} → {module1.name}")
+        
+        # p2: M1 ⊕ M2 → M2
+        projection2 = Morphism(direct_sum_module, module2, name=f"p2: {direct_sum_module.name} → {module2.name}")
+
+        # Set the maps for each morphism at each vertex
+        for vertex_id in quiver.get_vertices():
+            dim1 = module1.spaces.get(vertex_id, 0)
+            dim2 = module2.spaces.get(vertex_id, 0)
+            dim_total = dim1 + dim2
+
+            # Inclusion maps
+            if dim1 > 0 and dim_total > 0:
+                # i1 maps M1 into the first dim1 coordinates of M1 ⊕ M2
+                i1_map = field.zero_matrix(dim_total, dim1)
+                i1_map[:dim1, :] = field.identity_matrix(dim1)
+                inclusion1.set_map(vertex_id, i1_map)
+            elif dim1 == 0 or dim_total == 0:
+                inclusion1.maps[vertex_id] = ZeroMap(dim1, dim_total)
+
+            if dim2 > 0 and dim_total > 0:
+                # i2 maps M2 into the last dim2 coordinates of M1 ⊕ M2
+                i2_map = field.zero_matrix(dim_total, dim2)
+                i2_map[dim1:, :] = field.identity_matrix(dim2)
+                inclusion2.set_map(vertex_id, i2_map)
+            elif dim2 == 0 or dim_total == 0:
+                inclusion2.maps[vertex_id] = ZeroMap(dim2, dim_total)
+
+            # Projection maps
+            if dim_total > 0 and dim1 > 0:
+                # p1 projects M1 ⊕ M2 onto the first dim1 coordinates
+                p1_map = field.zero_matrix(dim1, dim_total)
+                p1_map[:, :dim1] = field.identity_matrix(dim1)
+                projection1.set_map(vertex_id, p1_map)
+            elif dim_total == 0 or dim1 == 0:
+                projection1.maps[vertex_id] = ZeroMap(dim_total, dim1)
+
+            if dim_total > 0 and dim2 > 0:
+                # p2 projects M1 ⊕ M2 onto the last dim2 coordinates
+                p2_map = field.zero_matrix(dim2, dim_total)
+                p2_map[:, dim1:] = field.identity_matrix(dim2)
+                projection2.set_map(vertex_id, p2_map)
+            elif dim_total == 0 or dim2 == 0:
+                projection2.maps[vertex_id] = ZeroMap(dim_total, dim2)
+
+        return direct_sum_module, inclusion1, inclusion2, projection1, projection2
 
     @classmethod
     def direct_power(cls, module: 'Module', power: int) -> 'Module':
