@@ -3,6 +3,10 @@ import matplotlib.pyplot as plt
 from typing import Dict, List, Set, Tuple, Optional, Union, Any
 import json
 
+from .field import Field
+from .morphism import Morphism
+from .module import Module
+
 class Quiver:
     """
     A class representing a quiver (directed graph) without oriented cycles.
