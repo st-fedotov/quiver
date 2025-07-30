@@ -9,8 +9,7 @@ from .quiver import Quiver
 
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from .morphism import Morphism
+from .morphism import Morphism
 
 class Module:
     """
