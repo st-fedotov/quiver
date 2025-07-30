@@ -1,3 +1,4 @@
+from __future__ import annotations
 import numpy as np
 from typing import Dict, List, Tuple, Union, Optional, Any
 import copy
@@ -6,7 +7,6 @@ import json
 from .field import Field, ZeroMap
 from .quiver import Quiver
 
-from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
