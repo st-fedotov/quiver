@@ -5,7 +5,85 @@ from typing import Union, List, Tuple, Optional, Any
 
 import numba
 
-class FiniteField:
+from abc import ABC, abstractmethod
+
+class Field(ABC):
+    """Abstract base class for fields."""
+    
+    def __init__(self):
+        self.characteristic = None
+        self.degree = None
+        self.order = None
+        self.zero = None
+        self.one = None
+    
+    @abstractmethod
+    def element(self, value):
+        pass
+    
+    @abstractmethod
+    def matrix(self, values):
+        pass
+    
+    @abstractmethod
+    def is_invertible(self, matrix):
+        pass
+    
+    @abstractmethod
+    def inverse(self, matrix):
+        pass
+    
+    @abstractmethod
+    def rank(self, matrix):
+        pass
+
+    @abstractmethod
+    def find_matrix_coordinates(self, basis, target):
+        pass
+
+    def find_vector_coordinates(self, basis, vector):
+        """
+        Find the coordinates of a vector in terms of the given basis.
+        This is a wrapper around find_matrix_coordinates for a single vector.
+
+        Args:
+            basis: Matrix whose columns form a basis
+            vector: Vector to express in the basis
+            
+        Returns:
+            The coordinates of the vector in the basis, or None if the vector is not in the span
+        """
+        # Ensure vector is reshaped appropriately
+        vector_reshaped = vector.reshape(-1, 1) if len(vector.shape) == 1 else vector
+
+        # Call the matrix version with a single column
+        result = self.find_matrix_coordinates(basis, vector_reshaped)
+
+        # Return the result as a 1D array if it's not None
+        if result is not None:
+            return result.flatten() if result.shape[1] == 1 else result
+        return None
+
+    @abstractmethod
+    def column_space_basis(self, matrix: np.ndarray, do_express: bool = False, do_extend: bool = False,
+                           with_express: bool = False, with_extend: bool = False) -> Union[
+                               np.ndarray, Tuple[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray, np.ndarray]
+                               ]:
+        pass
+
+    @abstractmethod
+    def random_matrix(self, rows: int, cols: int) -> np.ndarray:
+        pass
+
+    @abstractmethod
+    def identity_matrix(self, size: int) -> np.ndarray:
+        pass
+
+    @abstractmethod
+    def zero_matrix(self, rows: int, cols: int) -> np.ndarray:
+        pass
+
+class FiniteField(Field):
     """
     A wrapper around the galois library for finite field operations.
     Provides field arithmetic, matrix operations, etc.
@@ -301,7 +379,7 @@ class FiniteField:
 
         return A_rre, p
 
-    def find_matrix_coordinates(self, basis, target, field=None):
+    def find_matrix_coordinates(self, basis, target):
         """
         Find the coordinates of multiple vectors in terms of the given basis.
         This function solves matrix equations AX = B, where each column of the
@@ -315,9 +393,7 @@ class FiniteField:
             corresponding column of the target matrix in the basis. Returns None if
             any column is not in the span of the basis.
         """
-        # Use self as the field if not provided
-        if field is None:
-            field = self
+
         # Ensure everything is in the right format
         basis_GF = self.GF(basis)
         target_GF = self.GF(target)
@@ -378,29 +454,6 @@ class FiniteField:
         
         return solution
 
-    def find_vector_coordinates(self, basis, vector, field=None):
-        """
-        Find the coordinates of a vector in terms of the given basis.
-        This is a wrapper around find_matrix_coordinates for a single vector.
-
-        Args:
-            basis: Matrix whose columns form a basis
-            vector: Vector to express in the basis
-            field: Optional field instance (defaults to self)
-
-        Returns:
-            The coordinates of the vector in the basis, or None if the vector is not in the span
-        """
-        # Ensure vector is reshaped appropriately
-        vector_reshaped = vector.reshape(-1, 1) if len(vector.shape) == 1 else vector
-
-        # Call the matrix version with a single column
-        result = self.find_matrix_coordinates(basis, vector_reshaped, field)
-
-        # Return the result as a 1D array if it's not None
-        if result is not None:
-            return result.flatten() if result.shape[1] == 1 else result
-        return None
 
     def column_space_basis(self, matrix: np.ndarray, do_express: bool = False, do_extend: bool = False,
                            with_express: bool = False, with_extend: bool = False) -> Union[
@@ -530,7 +583,7 @@ class FiniteField:
         else:
             return f"Finite Field GF({self.characteristic}^{self.degree})"
 
-class ComplexNumbers:
+class ComplexNumbers(Field):
     """
     A wrapper for complex number operations.
     Provides field arithmetic, matrix operations, etc.
@@ -779,29 +832,6 @@ class ComplexNumbers:
         
         return solution
 
-    def find_vector_coordinates(self, basis, vector, field=None):
-        """
-        Find the coordinates of a vector in terms of the given basis.
-        This is a wrapper around find_matrix_coordinates for a single vector.
-
-        Args:
-            basis: Matrix whose columns form a basis
-            vector: Vector to express in the basis
-            field: Optional field instance (defaults to self)
-
-        Returns:
-            The coordinates of the vector in the basis, or None if the vector is not in the span
-        """
-        # Ensure vector is reshaped appropriately
-        vector_reshaped = vector.reshape(-1, 1) if len(vector.shape) == 1 else vector
-
-        # Call the matrix version with a single column
-        result = self.find_matrix_coordinates(basis, vector_reshaped, field)
-
-        # Return the result as a 1D array if it's not None
-        if result is not None:
-            return result.flatten() if result.shape[1] == 1 else result
-        return None
 
     def column_space_basis(self, matrix: np.ndarray, do_express: bool = False, do_extend: bool = False,
                            with_express: bool = False, with_extend: bool = False) -> Union[
