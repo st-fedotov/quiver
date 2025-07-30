@@ -4,8 +4,6 @@ from typing import Dict, List, Set, Tuple, Optional, Union, Any
 import json
 
 from .field import Field, ZeroMap
-from .morphism import Morphism
-from .module import Module
 
 class Quiver:
     """
