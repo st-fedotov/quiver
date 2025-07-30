@@ -148,7 +148,7 @@ class FiniteField(Field):
 
     def zero_matrix(self, rows: int, cols: int) -> np.ndarray:
         """Generate a zero matrix of the given dimensions."""
-        return self.GF.Zeros((rows, cols))
+        return self.zero_matrix(rows, cols)
 
     def is_invertible(self, matrix: np.ndarray) -> bool:
         """
@@ -221,7 +221,7 @@ class FiniteField(Field):
             # Fall back to our own implementation using row reduction
             # Augment the matrix with the identity matrix [A|I]
             I = self.GF.Identity(n)
-            augmented = self.GF.Zeros((n, 2*n))
+            augmented = self.zero_matrix(n, 2*n)
             augmented[:, :n] = matrix_GF
             augmented[:, n:] = I
 
@@ -407,7 +407,7 @@ class FiniteField(Field):
             raise ValueError(f"Dimension mismatch: basis has {m} rows but target has {m2} rows")
         
         # Create the full augmented matrix [basis | target] at once
-        augmented = self.GF.Zeros((m, n + k))
+        augmented = self.zero_matrix(m, n + k)
         augmented[:, :n] = basis_GF
         augmented[:, n:] = target_GF
         
@@ -426,7 +426,7 @@ class FiniteField(Field):
                 return None  # At least one system is inconsistent
         
         # Initialize the solution matrix
-        solution = self.GF.Zeros((n, k))
+        solution = self.zero_matrix(n, k)
         
         # Solve all systems using back substitution
         # Start from the last pivot row
@@ -526,10 +526,10 @@ class FiniteField(Field):
             #  In many cases the pivot columns will lie in {0,1,...,m-1}.)
             non_basis_indices = [i for i in range(m) if i not in pivot_cols]
             if non_basis_indices:
-                extension_columns = self.GF.Zeros((m, len(non_basis_indices)))
+                extension_columns = self.zero_matrix(m, len(non_basis_indices))
                 for j, idx in enumerate(non_basis_indices):
                     extension_columns[idx, j] = 1
-                #extended_basis = self.GF.Zeros((m, m))
+                #extended_basis = self.zero_matrix(m, m)
                 #extended_basis[:, :len(pivot_cols)] = basis_columns
                 #extended_basis[:, len(pivot_cols):] = extension_columns
                 #return extended_basis
@@ -566,7 +566,7 @@ class FiniteField(Field):
                 non_basis = matrix_GF[:, non_pivot_columns]
 
                 # The expressions come from the RREF: for each non-pivot column, express it in terms of pivot columns.
-                expressions = self.GF.Zeros((len(pivot_columns), len(non_pivot_columns)))
+                expressions = self.zero_matrix(len(pivot_columns), len(non_pivot_columns))
                 for i, non_piv_col in enumerate(non_pivot_columns):
                     for j, piv_col in enumerate(pivot_columns):
                         # Find the row in the RREF corresponding to the pivot in piv_col.
@@ -730,7 +730,7 @@ class ComplexNumbers(Field):
         This closely follows the algorithm from galois._domains._linalg.row_reduce_jit.
         """
 
-        print("If you got here, you're doing manual matrix row reduction, and that means you're totally screwed up. Sorry")
+        # print("If you got here, you're doing manual matrix row reduction, and that means you're totally screwed up. Sorry")
 
         # Make a copy to avoid modifying the original
         A_rre = matrix.copy()
@@ -785,7 +785,7 @@ class ComplexNumbers(Field):
             raise ValueError(f"Dimension mismatch: basis has {m} rows but target has {m2} rows")
         
         # Create the full augmented matrix [basis | target] at once
-        augmented = self.GF.Zeros((m, n + k))
+        augmented = self.zero_matrix(m, n + k)
         augmented[:, :n] = basis
         augmented[:, n:] = target
         
@@ -804,7 +804,7 @@ class ComplexNumbers(Field):
                 return None  # At least one system is inconsistent
         
         # Initialize the solution matrix
-        solution = self.GF.Zeros((n, k))
+        solution = self.zero_matrix(n, k)
         
         # Solve all systems using back substitution
         # Start from the last pivot row
@@ -902,10 +902,10 @@ class ComplexNumbers(Field):
             #  In many cases the pivot columns will lie in {0,1,...,m-1}.)
             non_basis_indices = [i for i in range(m) if i not in pivot_cols]
             if non_basis_indices:
-                extension_columns = self.GF.Zeros((m, len(non_basis_indices)))
+                extension_columns = self.zero_matrix(m, len(non_basis_indices))
                 for j, idx in enumerate(non_basis_indices):
                     extension_columns[idx, j] = 1
-                #extended_basis = self.GF.Zeros((m, m))
+                #extended_basis = self.zero_matrix(m, m)
                 #extended_basis[:, :len(pivot_cols)] = basis_columns
                 #extended_basis[:, len(pivot_cols):] = extension_columns
                 #return extended_basis
@@ -942,7 +942,7 @@ class ComplexNumbers(Field):
                 non_basis = matrix[:, non_pivot_columns]
 
                 # The expressions come from the RREF: for each non-pivot column, express it in terms of pivot columns.
-                expressions = self.GF.Zeros((len(pivot_columns), len(non_pivot_columns)))
+                expressions = self.zero_matrix(len(pivot_columns), len(non_pivot_columns))
                 for i, non_piv_col in enumerate(non_pivot_columns):
                     for j, piv_col in enumerate(pivot_columns):
                         # Find the row in the RREF corresponding to the pivot in piv_col.
