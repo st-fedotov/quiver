@@ -101,10 +101,7 @@ class Module:
                         self.maps[arrow_id] = ZeroMap(source_dim, target_dim)
                         continue
 
-                    # Convert to field matrix if necessary
                     if matrix is not None:
-                        if not isinstance(matrix, np.ndarray) or not hasattr(matrix, 'dtype') or matrix.dtype != self.field.GF.dtype:
-                            matrix = self.field.matrix(matrix)
 
                         # Ensure both dimensions are non-zero before checking matrix shape
                         if source_dim > 0 and target_dim > 0:
@@ -223,9 +220,6 @@ class Module:
             self.maps[arrow_id] = self.field.zero_matrix(target_dim, source_dim)
             return
 
-        # Convert to field matrix if necessary
-        if not isinstance(matrix, np.ndarray) or not hasattr(matrix, 'dtype') or matrix.dtype != self.field.GF.dtype:
-            matrix = self.field.matrix(matrix)
 
         # Check dimensions - matrix shape should be (target_dim, source_dim)
         if matrix.shape != (target_dim, source_dim):
@@ -1573,10 +1567,6 @@ class Morphism:
                 self.maps[vertex_id] = matrix
                 continue
 
-            # Convert to field matrix if necessary
-            if not isinstance(matrix, np.ndarray) or not hasattr(matrix, 'dtype') or matrix.dtype != self.field.GF.dtype:
-                matrix = self.field.matrix(matrix)
-
             # Check dimensions
             if matrix.shape != (target_dim, source_dim):
                 raise ValueError(
@@ -1617,10 +1607,6 @@ class Morphism:
             # Set to zero map
             self.maps[vertex_id] = self.field.zero_matrix(target_dim, source_dim)
             return
-
-        # Convert to field matrix if necessary
-        if not isinstance(matrix, np.ndarray) or not hasattr(matrix, 'dtype') or matrix.dtype != self.field.GF.dtype:
-            matrix = self.field.matrix(matrix)
 
         # Check dimensions
         if matrix.shape != (target_dim, source_dim):
