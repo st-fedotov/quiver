@@ -5,7 +5,12 @@ import json
 
 from .field import Field, ZeroMap
 from .quiver import Quiver
-from .morphism import Morphism
+
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .morphism import Morphism
 
 class Module:
     """
