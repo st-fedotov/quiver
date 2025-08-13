@@ -1811,6 +1811,115 @@ class Morphism:
 
         return result
 
+    # ---------- helpers ----------
+    def _check_compat(self, other: "Morphism"):
+        if not isinstance(other, Morphism):
+            raise TypeError("Can only add Morphism to Morphism")
+        if self.quiver is not other.quiver:
+            raise ValueError("Morphisms must be over the same quiver")
+        if self.field is not other.field:
+            raise ValueError("Morphisms must be over the same field")
+        # same source/target dims at every vertex
+        for v in self.quiver.get_vertices():
+            if (self.source.spaces[v] != other.source.spaces[v] or
+                self.target.spaces[v] != other.target.spaces[v]):
+                raise ValueError("Incompatible vertex dimensions")
+
+    def _zero_matrix_for_vertex(self, v: int):
+        td = self.target.spaces[v]; sd = self.source.spaces[v]
+        if td == 0 or sd == 0:
+            return ZeroMap(sd, td)
+        return self.field.zero_matrix(td, sd)
+
+    def _add_maps(self, A, B, v: int):
+        # ZeroMap handling
+        if isinstance(A, ZeroMap) and isinstance(B, ZeroMap):
+            return ZeroMap(A.source_dim, A.target_dim)
+        if isinstance(A, ZeroMap):
+            return B.copy() if hasattr(B, "copy") else B
+        if isinstance(B, ZeroMap):
+            return A.copy() if hasattr(A, "copy") else A
+        return A + B
+
+    def _scale_map(self, s, A):
+        if isinstance(A, ZeroMap):
+            return A  # s*0 = 0, keep ZeroMap
+        return A * s
+
+    def _coerce_scalar(self, s):
+        # Try to enforce “scalar from the field”. If your Field exposes
+        # is_element / coerce, we use them; otherwise we accept Python/NumPy scalars.
+        if hasattr(self.field, "is_element"):
+            if not self.field.is_element(s):
+                raise TypeError("Scalar not in the base field")
+            return s
+        if hasattr(self.field, "coerce"):
+            return self.field.coerce(s)
+        # fallback: assume Python/NumPy numeric scalar is fine
+        return s
+        
+    def __add__(self, other: "Morphism") -> "Morphism":
+        self._check_compat(other)
+        maps = {}
+        for v in self.quiver.get_vertices():
+            A = self.maps[v]
+            B = other.maps[v]
+            maps[v] = self._add_maps(A, B, v)
+        return Morphism(self.source, self.target, name=f"({self.name}+{other.name})", maps=maps)
+
+    # make sum([...]) work (sum starts with 0)
+    def __radd__(self, other):
+        if other == 0:
+            return self
+        return NotImplemented
+
+    def __mul__(self, scalar) -> "Morphism":
+        s = self._coerce_scalar(scalar)
+        maps = {}
+        for v in self.quiver.get_vertices():
+            maps[v] = self._scale_map(s, self.maps[v])
+        return Morphism(self.source, self.target, name=f"{self.name}*{s}", maps=maps)
+
+    # allow left scalar multiplication: s * morphism
+    def __rmul__(self, scalar) -> "Morphism":
+        s = self._coerce_scalar(scalar)
+        maps = {}
+        for v in self.quiver.get_vertices():
+            maps[v] = self._scale_map(s, self.maps[v])
+        return Morphism(self.source, self.target, name=f"{s}*{self.name}", maps=maps)
+
+    def round(self, decimals: int = 0, inplace: bool = False) -> "Morphism":
+        """
+        Round numeric entries of each vertex map to the given number of decimals.
+        - Raises ValueError on finite fields.
+        - For complex arrays, rounds real and imaginary parts separately
+          (NumPy's behavior).
+        """
+        # detect finite fields if your Field exposes a flag or order
+        is_finite = bool(getattr(self.field, "is_finite", False)) \
+                    or (hasattr(self.field, "order") and getattr(self.field, "order") not in (None, 0))
+
+        if is_finite:
+            raise ValueError("round() is not defined over finite fields")
+
+        target = self if inplace else Morphism(self.source, self.target, name=self.name, maps=self.maps.copy())
+
+        for v in self.quiver.get_vertices():
+            A = target.maps[v]
+            if isinstance(A, ZeroMap):
+                continue
+            # Only round floating/complex arrays; leave exact (int, rational) as-is
+            if isinstance(A, np.ndarray) and (np.issubdtype(A.dtype, np.floating) or np.issubdtype(A.dtype, np.complexfloating)):
+                target.maps[v] = np.round(A, decimals=decimals)
+            else:
+                # If your Field has its own rounding, you can hook it here:
+                if hasattr(self.field, "round_matrix"):
+                    target.maps[v] = self.field.round_matrix(A, decimals)
+                else:
+                    # default: no-op for exact types
+                    target.maps[v] = A
+        return target
+
     def kernel(self) -> Tuple['Module', 'Morphism']:
         """
         Compute the kernel of the morphism.
