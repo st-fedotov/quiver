@@ -2374,10 +2374,10 @@ class Morphism:
             raise ValueError("Morphisms must be over the same field")
 
         # Compute direct sum of source modules
-        source_sum = Module.direct_sum(f.source, g.source)
+        source_sum, source_incl1, source_incl2, source_proj1, source_proj2 = Module.direct_sum(f.source, g.source)
 
         # Compute direct sum of target modules
-        target_sum = Module.direct_sum(f.target, g.target)
+        target_sum, target_incl1, target_incl2, target_proj1, target_proj2 = Module.direct_sum(f.target, g.target)
 
         # Create the direct sum morphism
         result_morphism = cls(source_sum, target_sum,
