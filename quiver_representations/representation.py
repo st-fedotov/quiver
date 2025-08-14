@@ -2415,7 +2415,11 @@ class Morphism:
             # Set the map for this vertex
             result_morphism.set_map(vertex_id, result_map)
 
-        return source_sum, target_sum, result_morphism
+        return (
+            source_sum, target_sum, result_morphism,
+            source_incl1, source_incl2, source_proj1, source_proj2,
+            target_sum, target_incl1, target_incl2, target_proj1, target_proj2
+        )
 
     @classmethod
     def direct_power(cls, morphism: 'Morphism', power: int) -> Tuple['Module', 'Module', 'Morphism']:
