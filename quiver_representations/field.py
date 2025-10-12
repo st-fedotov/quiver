@@ -639,7 +639,7 @@ class ComplexNumbers(Field):
     
     def zero_matrix(self, rows: int, cols: int) -> np.ndarray:
         """Generate a zero matrix of the given dimensions."""
-        return np.zeros((rows, cols), dtype=complex)
+        return self.GF.Zeros((rows, cols)) 
 
     def is_invertible(self, matrix: np.ndarray) -> bool:
         """
