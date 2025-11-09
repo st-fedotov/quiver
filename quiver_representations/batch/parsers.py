@@ -375,9 +375,9 @@ def parse_quiver_jobs_rad(path: str = ".", write_json_path: str | None = None,
 
 def print_results_table_rad(parsed: dict) -> None:
     def fmt_bool(v):
-        if v is True:  return "✔"
-        if v is False: return "✘"
-        return "—"
+        if v is True:  return "Y"
+        if v is False: return "x"
+        return "-"
 
     def fmt_dim(vec):
         return "—" if not vec else "[" + ", ".join(str(x) for x in vec) + "]"
