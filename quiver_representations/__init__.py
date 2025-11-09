@@ -66,7 +66,6 @@ from .batch import (
     parse_ring_block,
     load_manifest,
     parse_ifullsat_gb,
-    compute_hilbert_series,
     collect_hilbert_results,
     relpath,
 )
