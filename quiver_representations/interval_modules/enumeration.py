@@ -184,7 +184,7 @@ def build_An_quiver(n: int):
         Q.add_arrow(verts[k], verts[k + 1], f"a{k}")
     return Q
 
-def make_rad_jobs_for_An(n: int, Q: quiver = None,
+def make_rad_jobs_for_An(n: int, Q: Quiver = None,
                          coverage: dict[int, int] = None,
                          target_dim=None):
     """
