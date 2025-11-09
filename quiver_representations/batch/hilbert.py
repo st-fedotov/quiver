@@ -4,7 +4,7 @@ Hilbert function and multi-degree space dimension computations.
 
 import yaml
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional, Any
+from typing import Dict, List, Tuple, Optional, Any, Iterable
 
 def load_manifest(run_root: Path) -> Dict[str, Dict]:
     doc = yaml.safe_load((run_root / "manifest.yaml").read_text(encoding="utf-8", errors="ignore")) or {}
