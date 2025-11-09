@@ -5,6 +5,7 @@ Interval module construction for type A_n quivers.
 from typing import Iterable, Tuple, List, Dict, Optional
 from pathlib import Path
 import numpy as np
+from ..module import Module
 
 
 def build_interval_explicit(quiver, field, order: List[int], i: int, j: int, *, name: str | None = None) -> Module:
