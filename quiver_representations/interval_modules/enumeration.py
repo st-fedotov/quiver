@@ -12,7 +12,7 @@ from typing import Dict, List, Tuple, Iterator
 from itertools import product
 from pathlib import Path
 from ..quiver import Quiver
-
+from .type_d import DnIndec, DnKind
 
 # Type aliases
 Bag = List[Tuple[int, int]]  # For A_n: list of interval (i,j) pairs
