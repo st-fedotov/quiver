@@ -27,7 +27,6 @@ from .grassmannians import (
     vname,
 )
 
-# NEW: Interval module exports
 from .interval_modules import (
     # Type A
     build_interval_An,
@@ -48,9 +47,10 @@ from .interval_modules import (
     form_Dn_module_from_bag_explicit,
     write_batch_rad_from_dn_bags,
     bag_pretty,
+    enumerate_Dn_bags_from_coverage,
+    make_rad_jobs_for_Dn,
 )
 
-# NEW: Batch processing exports
 from .batch import (
     write_batch_rad_from_triples,
     parse_quiver_jobs_rad,
@@ -64,7 +64,30 @@ from .batch import (
     relpath,
 )
 
-from .utils import PathRec
+from .utils import (
+    PathRec,
+    module_over_field,
+)
+
+from .analysis import (
+    # Homomorphisms
+    hom_interval,
+    hom_interval_to_bag,
+    find_hom_basis,
+    # Poset construction
+    write_rank_poset_from_jobs,
+    write_rank_poset_from_jobs_Dn,
+    report_local_minima_dn,
+    # Conjectures
+    check_conjectures,
+    check_conjectures_write,
+    select_generic_jobs_strict,
+    read_ranks_csv_strict,
+    read_edges_csv_strict,
+    read_parsed_csv_strict,
+    # Visualization
+    visualize_degeneracy_dag,
+)
 
 __version__ = "0.2.0"
 
@@ -126,7 +149,27 @@ __all__ = [
     "compute_hilbert_series",
     "collect_hilbert_results",
     "relpath",
+    
+    # Analysis
+    "hom_interval",
+    "hom_interval_to_bag",
+    "find_hom_basis",
+    "write_rank_poset_from_jobs",
+    "write_rank_poset_from_jobs_Dn",
+    "report_local_minima_dn",
+    "check_conjectures",
+    "check_conjectures_write",
+    "select_generic_jobs_strict",
+    "read_ranks_csv_strict",
+    "read_edges_csv_strict",
+    "read_parsed_csv_strict",
+    "visualize_degeneracy_dag",
 
-    # Utilities
+    # D_n enumeration
+    "enumerate_Dn_bags_from_coverage",
+    "make_rad_jobs_for_Dn",
+
+    # Utils
     "PathRec",
+    "module_over_field",
 ]
