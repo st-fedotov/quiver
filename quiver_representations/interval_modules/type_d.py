@@ -8,6 +8,11 @@ from enum import IntEnum
 from collections import Counter
 from typing import List, Dict, Tuple, Optional
 from pathlib import Path
+import math
+from ..module import Module
+from ..quiver import Quiver
+from ..batch.core import write_batch_rad_from_triples
+
 
 
 class DnKind(IntEnum):
@@ -333,7 +338,7 @@ def write_batch_rad_from_dn_bags(
       - forward (Q, M, dim_vertex_id[, max_len_full]) to write_batch_rad_from_triples
     """
     triples = []
-    for item in jobs_dn:
+    for item in jobs_bags:
         if len(item) == 2:
             Q, bag = item
             dim_pos = None
