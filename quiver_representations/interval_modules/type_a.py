@@ -6,6 +6,9 @@ from typing import Iterable, Tuple, List, Dict, Optional
 from pathlib import Path
 import numpy as np
 from ..module import Module
+from tqdm import tqdm
+from ..batch.core import write_batch_rad_from_triples
+
 
 
 def build_interval_explicit(quiver, field, order: List[int], i: int, j: int, *, name: str | None = None) -> Module:
@@ -134,7 +137,7 @@ def write_batch_rad_from_interval_bags_explicit(
       - forwards (Q, M, dim_dict[, max_len_full]) to write_batch_rad_from_triples.
     """
     triples = []
-    for item in tqdm(jobs):
+    for item in tqdm(jobs_intervals):
         if len(item) == 3:
             Q, bag, dim_positions = item
             mplf = kwargs.get("max_path_len_full_default", 3)
