@@ -5,6 +5,7 @@ Helper functions for Grassmannian computations and Macaulay2 integration.
 import numpy as np
 from fractions import Fraction
 from typing import Iterable, List, Sequence, Set, Dict, Tuple, Any, Optional
+from .plucker import PluckerVar
 
 def are_projectively_equivalent(coords1: np.ndarray, coords2: np.ndarray,
                               zero_tolerance: float = 1e-5,
