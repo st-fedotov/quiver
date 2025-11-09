@@ -11,6 +11,7 @@ This module provides functions for:
 from typing import Dict, List, Tuple, Iterator
 from itertools import product
 from pathlib import Path
+from ..quiver import Quiver
 
 
 # Type aliases
@@ -91,8 +92,6 @@ def enumerate_interval_bags_An(n: int, c: int | None = None):
 
     return bags
 
-
-Bag = List[Tuple[int, int]]
 
 def enumerate_interval_bags_from_coverage_iter(coverage: Dict[int, int]) -> Iterator[Bag]:
     """
