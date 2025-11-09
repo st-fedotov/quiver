@@ -3,7 +3,7 @@ Plücker coordinate variable and polynomial infrastructure.
 """
 
 from dataclasses import dataclass, field
-from typing import Tuple, List, Dict, Any, Optional
+from typing import Tuple, List, Dict, Any, Optional, Iterable
 
 
 # --- numeric tolerances ---
