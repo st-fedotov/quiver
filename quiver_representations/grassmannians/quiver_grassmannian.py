@@ -3,13 +3,13 @@ Quiver Grassmannian Gr_e(M) computations.
 """
 
 import numpy as np
-from typing import Dict, Tuple, Optional, Any, List
-from collections import defaultdict
-
-import numpy as np
 import itertools
 from typing import Dict, Tuple, Optional, Any, List
 from collections import defaultdict
+
+from ..utils.paths import PathRec
+from .plucker import PluckerVar, PluckerPolynomial
+from .classical import Grassmannian
 
 class QuiverGrassmannian:
     """
