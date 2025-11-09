@@ -15,6 +15,10 @@ import csv
 from collections import Counter, defaultdict
 from tqdm import tqdm
 
+from .hom import hom_interval_to_bag
+from .poset_utils import _hasse_edges
+
+
 
 def _infer_n_from_jobs(jobs):
     """
@@ -64,49 +68,6 @@ def _all_pairs_ij(n):
     """All pairs (i,j) with 0<=i<j<=n-1 in lex order."""
     return [(i,j) for i in range(n-1) for j in range(i+1, n)]
 
-def _hasse_edges(ids, leq_adj):
-    """
-    Transitive reduction of a finite poset given by adjacency (u->v if u <= v and u!=v).
-    Return minimal edges (Hasse diagram).
-    """
-    # Compute reachability via Floyd–Warshall on boolean adjacency
-    idx = {u: i for i, u in enumerate(ids)}
-    n = len(ids)
-    R = [[False]*n for _ in range(n)]
-    for u in ids:
-        iu = idx[u]
-        for v in leq_adj[u]:
-            if u != v:
-                R[iu][idx[v]] = True
-    for k in range(n):
-        for i in range(n):
-            if R[i][k]:
-                row_i = R[i]
-                row_k = R[k]
-                for j in range(n):
-                    if row_k[j]:
-                        row_i[j] = True
-
-    # Keep u->v if there is no w with u->w and w->v (i.e., not implied transitively)
-    edges = []
-    for u in ids:
-        iu = idx[u]
-        for v in leq_adj[u]:
-            if u == v:
-                continue
-            iv = idx[v]
-            covered = False
-            for w in ids:
-                if w == u or w == v:
-                    continue
-                iw = idx[w]
-                if R[iu][iw] and R[iw][iv]:
-                    covered = True
-                    break
-            if not covered:
-                edges.append((u, v))
-    return edges
-
 def build_dir_edges(Q):
     """
     For a type-A quiver Q with vertices 0..n-1 and arrows as dicts
@@ -141,6 +102,58 @@ def build_dir_edges(Q):
         out[k] = dir_edges[k]
     return out
 
+def hom_interval(dir_edges, a, b, c, d):
+    """
+    dim Hom([a,b] -> [c,d]) for type-A with arbitrary orientation.
+    dir_edges[k] = +1 if k -> k+1, and -1 if (k+1) -> k.
+
+    Rule:
+      Let [L,R] = overlap([a,b],[c,d]). If empty: 0.
+      At the LEFT boundary (edge L-1 <-> L):
+        - If domain sticks out left (a <= L-1 while c > L-1), we need the arrow k->k+1 (outside->inside),
+          i.e. dir_edges[L-1] == +1.
+        - If codomain sticks out left, we need (k+1)->k (inside->outside),
+          i.e. dir_edges[L-1] == -1.
+      At the RIGHT boundary (edge R <-> R+1):
+        - If domain sticks out right (b >= R+1 while d < R+1), we need (R+1)->R (outside->inside),
+          i.e. dir_edges[R] == -1.
+        - If codomain sticks out right, we need R->R+1 (inside->outside),
+          i.e. dir_edges[R] == +1.
+    """
+    n = len(dir_edges) + 1
+
+    # overlap
+    L = max(a, c)
+    R = min(b, d)
+    if L > R:
+        return 0
+
+    # LEFT boundary: edge (L-1, L) if it exists
+    k = L - 1
+    if k >= 0:
+        dom_only = (a <= k <= b) and not (c <= k <= d)   # domain extends left beyond overlap
+        cod_only = (c <= k <= d) and not (a <= k <= b)   # codomain extends left
+        if dom_only and dir_edges[k] != +1:  # need outside->inside: k -> k+1 (= L)
+            return 0
+        if cod_only and dir_edges[k] != -1:  # need inside->outside: (k+1)=L -> k
+            return 0
+
+    # RIGHT boundary: edge (R, R+1) if it exists
+    k = R
+    if k <= n - 2:
+        dom_only = (a <= k+1 <= b) and not (c <= k+1 <= d)  # domain extends right
+        cod_only = (c <= k+1 <= d) and not (a <= k+1 <= b)  # codomain extends right
+        if dom_only and dir_edges[k] != -1:  # need outside->inside: (R+1) -> R
+            return 0
+        if cod_only and dir_edges[k] != +1:  # need inside->outside: R -> (R+1)
+            return 0
+
+    return 1
+
+
+def hom_interval_to_bag(dir_edges, i, j, bag):
+    return sum(hom_interval(dir_edges, i, j, p, q) for (p, q) in bag)
+
 def _degenerates(dir_edges, bagM, bagN):
     """
     M <= N  iff  Hom([i,j], M) <= Hom([i,j], N) for all intervals [i,j].
@@ -153,25 +166,29 @@ def _degenerates(dir_edges, bagM, bagN):
                 return False
     return True
 
+# -------- main writer
 
 def write_rank_poset_from_jobs(jobs, out_dir):
     """
     Input:
       jobs: list of (Q, interval_bag, target_dim) as in your RAD batches.
-            Q is ignored here; only interval_bag is used.
     Output files in out_dir:
       - ranks.csv : id, ranks r_i_j for all i<j, then multiplicities for all (a,b)
-      - edges.csv : hasse edges 'src,dst' for the degeneration poset (rank-array order)
+      - edges.csv : hasse edges 'src,dst' for the degeneration poset
+                    (NOW computed via Hom-order; filename/columns unchanged)
     Returns the output directory (Path).
     """
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
+    if not jobs:
+        raise ValueError("No jobs provided.")
+
     n = _infer_n_from_jobs(jobs)
     pairs_ij = _all_pairs_ij(n)
     interval_keys = _all_interval_keys(n)
 
-    # Compute ranks and multiplicities
+    # Compute ranks and multiplicities (kept for compatibility with your parsers)
     ranks_per_id = {}
     mults_per_id = {}
     for jid, (_, bag, _dimP) in enumerate(jobs):
@@ -180,7 +197,7 @@ def write_rank_poset_from_jobs(jobs, out_dir):
         ranks_per_id[jid] = ranks
         mults_per_id[jid] = mults
 
-    # Write ranks.csv
+    # Write ranks.csv (UNCHANGED schema)
     rank_cols = [f"r_{i}_{j}" for (i,j) in pairs_ij]
     mult_cols = [f"x_{a}_{b}" for (a,b) in interval_keys]
     with open(out_dir / "ranks.csv", "w", newline="") as f:
@@ -192,19 +209,22 @@ def write_rank_poset_from_jobs(jobs, out_dir):
             row.extend(mults_per_id[jid].get((a,b), 0) for (a,b) in interval_keys)
             w.writerow(row)
 
-    # Build poset by rank comparison
+    # Build poset by HOM-order using quiver orientation from the FIRST job
+    Q0 = jobs[0][0]
+    dir_edges = build_dir_edges(Q0)
+
     ids = list(range(len(jobs)))
     leq_adj = defaultdict(list)
-    for u in ids:
-        Ru = ranks_per_id[u]
+    bags = [bag for (_, bag, _dimP) in jobs]
+    for u in tqdm(ids):
+        Mu = bags[u]
         for v in ids:
             if u == v:
                 continue
-            Rv = ranks_per_id[v]
-            if _leq_by_ranks(Ru, Rv):
+            if _degenerates(dir_edges, Mu, bags[v]):
                 leq_adj[u].append(v)
 
-    # Transitive reduction -> Hasse edges
+    # Transitive reduction -> Hasse edges (same file name as before)
     edges = _hasse_edges(ids, leq_adj)
     with open(out_dir / "edges.csv", "w", newline="") as f:
         w = csv.writer(f)
