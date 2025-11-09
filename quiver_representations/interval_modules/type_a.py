@@ -140,7 +140,7 @@ def write_batch_rad_from_interval_bags_explicit(
     for item in tqdm(jobs_intervals):
         if len(item) == 3:
             Q, bag, dim_positions = item
-            mplf = kwargs.get("max_path_len_full_default", 3)
+            mplf = max_path_len_full_default
         elif len(item) == 4:
             Q, bag, dim_positions, mplf = item
         else:
@@ -169,4 +169,17 @@ def write_batch_rad_from_interval_bags_explicit(
 
         triples.append((Q, M, dim, mplf))
 
-    return write_batch_rad_from_triples(triples, **kwargs)
+    return write_batch_rad_from_triples(
+          triples,
+          batch_root=batch_root,
+          run_id=run_id,
+          script_name=script_name,
+          out_stdout=out_stdout,
+          out_stderr=out_stderr,
+          docker_image=docker_image,
+          msys_no_pathconv=msys_no_pathconv,
+          overwrite_outputs=overwrite_outputs,
+          vertex_order=vertex_order,
+          prefix=prefix,
+      )
+
