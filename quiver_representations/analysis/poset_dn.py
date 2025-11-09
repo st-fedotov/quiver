@@ -14,6 +14,7 @@ import csv
 from tqdm import tqdm
 
 from ..interval_modules.type_d import DnKind, DnIndec
+from .poset_utils import _hasse_edges
 
 
 def write_rank_poset_from_jobs_Dn(jobs, out_dir, p: int = 107):
