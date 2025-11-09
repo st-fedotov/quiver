@@ -1047,7 +1047,7 @@ class Module:
 
         return inj_module, simple_module, injection
 
-def get_p_plus_i_dim(Q: quiver):
+def get_p_plus_i_dim(Q: Quiver, F: Field):
     """
     Returns the sum of all indecomposable projectives and injectives for a given quiver Q
     """
