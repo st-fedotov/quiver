@@ -2,6 +2,7 @@
 Hilbert function and multi-degree space dimension computations.
 """
 
+import re
 import yaml
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional, Any, Iterable
