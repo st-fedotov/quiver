@@ -10,6 +10,9 @@ from collections import defaultdict
 from ..utils.paths import PathRec
 from .plucker import PluckerVar, PluckerPolynomial
 from .classical import Grassmannian
+from ..quiver import topological_sort
+from ..field import ZeroMap
+
 
 class QuiverGrassmannian:
     """
