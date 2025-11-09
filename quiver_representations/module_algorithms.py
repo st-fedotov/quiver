@@ -505,3 +505,18 @@ def compute_injective_hull(
         defined_vertices.add(vertex_id)
 
     return inj_hull, hull_morphism
+
+def get_p_plus_i_dim(Q: quiver):
+    """
+    Returns the sum of all indecomposable projectives and injectives for a given quiver Q
+    """
+    PI = Module.projective(Q, F, 0)[0]
+    for i in range(1, len(Q.vertices)):
+        PI = Module.direct_sum(PI, Module.projective(Q, F, i)[0])[0]
+
+    p_dim = PI.get_dimension_vector()
+
+    for i in range(0, len(Q.vertices)):
+        PI = Module.direct_sum(PI, Module.injective(Q, F, i)[0])[0]
+
+    return p_dim, PI.get_dimension_vector()
