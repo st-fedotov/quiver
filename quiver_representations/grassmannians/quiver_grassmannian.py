@@ -12,7 +12,7 @@ from .plucker import PluckerVar, PluckerPolynomial, EPS_PRUNE
 from .classical import Grassmannian
 from ..quiver import topological_sort
 from ..field import ZeroMap
-
+from .utils import poly_to_m2
 
 class QuiverGrassmannian:
     """
