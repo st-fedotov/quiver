@@ -30,7 +30,6 @@ __all__ = [
     # Hilbert
     "load_manifest",
     "parse_ifullsat_gb",
-    "compute_hilbert_series",
     "collect_hilbert_results",
     "relpath",
 ]
