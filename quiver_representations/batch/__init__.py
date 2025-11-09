@@ -16,6 +16,7 @@ from .parsers import (
 from .hilbert import (
     load_manifest,
     parse_ifullsat_gb,
+    collect_hilbert_results,
     relpath,
 )
 
