@@ -8,7 +8,7 @@ from typing import Dict, Tuple, Optional, Any, List
 from collections import defaultdict
 
 from ..utils.paths import PathRec
-from .plucker import PluckerVar, PluckerPolynomial
+from .plucker import PluckerVar, PluckerPolynomial, EPS_PRUNE
 from .classical import Grassmannian
 from ..quiver import topological_sort
 from ..field import ZeroMap
