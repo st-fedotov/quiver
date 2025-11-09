@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Tuple, TYPE_CHECKING, Union
 
 import numpy as np
 
-from .field import Field, ZeroMap
+from .field import Field, ZeroMap, ComplexNumbers
 from .module_algorithms import (
     compute_injective_hull,
     compute_projective_cover,
@@ -1047,7 +1047,7 @@ class Module:
 
         return inj_module, simple_module, injection
 
-def get_p_plus_i_dim(Q: Quiver, F: Field):
+def get_p_plus_i_dim(Q: Quiver, F: Field = ComplexNumbers()):
     """
     Returns the sum of all indecomposable projectives and injectives for a given quiver Q
     """
