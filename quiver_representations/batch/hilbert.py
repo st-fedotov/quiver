@@ -6,6 +6,7 @@ import re
 import yaml
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional, Any, Iterable
+import csv, os, tarfile, tempfile
 
 def load_manifest(run_root: Path) -> Dict[str, Dict]:
     doc = yaml.safe_load((run_root / "manifest.yaml").read_text(encoding="utf-8", errors="ignore")) or {}
@@ -456,3 +457,120 @@ echo "All Hilbert jobs attempted."
     shutil.make_archive(str(dest), "zip", root_dir=dest.parent, base_dir=dest.name)
     print(f"Created archive: {dest.with_suffix('.zip')}")
     return dest
+
+
+def _parse_degree_row(row: Dict[str, str]) -> Tuple[int, ...]:
+    deg_keys = sorted([k for k in row if k.startswith("r") and k[1:].isdigit()],
+                      key=lambda k: int(k[1:]))
+    return tuple(int(row[k]) for k in deg_keys)
+
+def _degree_label(deg: Tuple[int, ...]) -> str:
+    return "(" + ",".join(str(x) for x in deg) + ")"
+
+def collect_hilbert_results(archive_path: str | os.PathLike = "run_results.tar.gz",
+                            output_csv: str | os.PathLike = "combined_hf.csv") -> Path:
+    """
+    Unpack run_results.tar.gz, read jobs/*/hf.csv, and write a wide CSV with:
+      job, quiver, module, target_dim, (r0,...), (r1,...), ...
+    Assumes all jobs share the same degree grid.
+    """
+    archive_path = Path(archive_path)
+    out_csv_path = Path(output_csv)
+
+    with tempfile.TemporaryDirectory() as tmpd:
+        tmp = Path(tmpd)
+        with tarfile.open(archive_path, "r:gz") as tf:
+            tf.extractall(tmp)
+
+        # locate run root that has jobs/
+        candidates = [p for p in tmp.iterdir() if p.is_dir()]
+        if not candidates:
+            raise FileNotFoundError("Archive appears empty after extraction.")
+        run_root = next((c for c in candidates if (c / "jobs").is_dir()), None)
+        if run_root is None:
+            run_root = next((c.parent for c in candidates if c.name == "jobs"), None)
+        if run_root is None:
+            raise FileNotFoundError("Could not find a 'jobs/' directory in the archive.")
+
+        jobs_dir = run_root / "jobs"
+        job_dirs = sorted([p for p in jobs_dir.iterdir() if p.is_dir()])
+        if not job_dirs:
+            raise FileNotFoundError("No job folders found under jobs/ in the archive.")
+
+        all_degrees: List[Tuple[int, ...]] = []
+        per_job_values: Dict[str, Dict[Tuple[int, ...], int]] = {}
+        per_job_meta: Dict[str, Dict[str, str]] = {}
+
+        for jd in job_dirs:
+            hf = jd / "hf.csv"
+            if not hf.exists():
+                continue
+
+            # meta (optional)
+            quiver = module = ""
+            target_dim_str = ""
+            meta_path = jd / "meta.yaml"
+            if meta_path.exists():
+                try:
+                    meta = yaml.safe_load(meta_path.read_text(encoding="utf-8")) or {}
+                    quiver = str(meta.get("quiver") or "")
+                    module = str(meta.get("module") or "")
+                    td = meta.get("target_dim")
+                    if isinstance(td, dict):
+                        td_list = [v for _, v in sorted(((int(k), int(v)) for k, v in td.items()),
+                                                        key=lambda kv: kv[0])]
+                    elif isinstance(td, list):
+                        td_list = [int(x) for x in td]
+                    else:
+                        td_list = []
+                    target_dim_str = "(" + ",".join(str(x) for x in td_list) + ")" if td_list else ""
+                except Exception:
+                    pass
+
+            # read degree -> hf
+            values: Dict[Tuple[int, ...], int] = {}
+            with hf.open(newline="", encoding="utf-8") as f:
+                rdr = csv.DictReader(f)
+                for row in rdr:
+                    deg = _parse_degree_row(row)
+                    hv_raw = row["hf"].strip()
+                    hv = int(hv_raw) if hv_raw.isdigit() else int(float(hv_raw))
+                    values[deg] = hv
+
+            if not values:
+                continue
+
+            job_name = jd.name
+            per_job_values[job_name] = values
+            per_job_meta[job_name] = {
+                "quiver": quiver,
+                "module": module,
+                "target_dim": target_dim_str,
+            }
+            if not all_degrees:
+                all_degrees = sorted(values.keys())
+
+        if not per_job_values:
+            raise FileNotFoundError("No hf.csv files with data found in the archive.")
+
+        deg_labels = [_degree_label(d) for d in all_degrees]
+        fieldnames = ["job", "quiver", "module", "target_dim"] + deg_labels
+
+        out_csv_path.parent.mkdir(parents=True, exist_ok=True)
+        with out_csv_path.open("w", newline="", encoding="utf-8") as g:
+            w = csv.DictWriter(g, fieldnames=fieldnames)
+            w.writeheader()
+            for job_name in sorted(per_job_values.keys()):
+                meta = per_job_meta.get(job_name, {})
+                row = {
+                    "job": job_name,
+                    "quiver": meta.get("quiver", ""),
+                    "module": meta.get("module", ""),
+                    "target_dim": meta.get("target_dim", ""),
+                }
+                grid = per_job_values[job_name]
+                for d, lab in zip(all_degrees, deg_labels):
+                    row[lab] = grid.get(d, "")
+                w.writerow(row)
+
+    return out_csv_path
