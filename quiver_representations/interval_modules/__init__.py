@@ -37,11 +37,8 @@ from .enumeration import (
 
 __all__ = [
     # Type A
-    "build_interval_An",
     "build_interval_explicit",
-    "form_An_module_from_intervals",
     "form_An_module_from_intervals_explicit",
-    "write_batch_rad_from_interval_bags",
     "write_batch_rad_from_interval_bags_explicit",
     # Type D
     "DnKind",
