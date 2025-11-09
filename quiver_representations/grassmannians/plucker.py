@@ -4,6 +4,7 @@ Plücker coordinate variable and polynomial infrastructure.
 
 from dataclasses import dataclass, field
 from typing import Tuple, List, Dict, Any, Optional, Iterable
+import numpy as np
 
 
 # --- numeric tolerances ---
