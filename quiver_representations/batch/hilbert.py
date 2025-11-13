@@ -6,7 +6,7 @@ import re
 import yaml
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional, Any, Iterable
-import csv, os, tarfile, tempfile
+import csv, os, tarfile, tempfile, zipfile
 
 def load_manifest(run_root: Path) -> Dict[str, Dict]:
     doc = yaml.safe_load((run_root / "manifest.yaml").read_text(encoding="utf-8", errors="ignore")) or {}
