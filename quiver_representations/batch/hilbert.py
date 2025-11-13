@@ -501,7 +501,7 @@ def _degree_label(deg: Tuple[int, ...]) -> str:
 def collect_hilbert_results(archive_path: str | os.PathLike = "run_results.tar.gz",
                             output_csv: str | os.PathLike = "combined_hf.csv") -> Path:
     """
-    Unpack run_results.tar.gz, read jobs/*/hf.csv, and write a wide CSV with:
+    Unpack archive (tar.gz or zip), read jobs/*/hf.csv, and write a wide CSV with:
       job, quiver, module, target_dim, (r0,...), (r1,...), ...
     Assumes all jobs share the same degree grid.
     """
@@ -510,8 +510,14 @@ def collect_hilbert_results(archive_path: str | os.PathLike = "run_results.tar.g
 
     with tempfile.TemporaryDirectory() as tmpd:
         tmp = Path(tmpd)
-        with tarfile.open(archive_path, "r:gz") as tf:
-            tf.extractall(tmp)
+
+        # Handle both zip and tar.gz archives
+        if archive_path.suffix == '.zip' or archive_path.name.endswith('.zip'):
+            with zipfile.ZipFile(archive_path, 'r') as zf:
+                zf.extractall(tmp)
+        else:
+            with tarfile.open(archive_path, "r:gz") as tf:
+                tf.extractall(tmp)
 
         # locate run root that has jobs/
         candidates = [p for p in tmp.iterdir() if p.is_dir()]
