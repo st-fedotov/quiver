@@ -501,38 +501,20 @@ def _degree_label(deg: Tuple[int, ...]) -> str:
 def collect_hilbert_results(archive_path: str | os.PathLike = "run_results.tar.gz",
                             output_csv: str | os.PathLike = "combined_hf.csv") -> Path:
     """
-    Unpack archive (tar.gz or zip), read jobs/*/hf.csv, and write a wide CSV with:
+    Read jobs/*/hf.csv from either a directory or archive (tar.gz or zip),
+    and write a wide CSV with:
       job, quiver, module, target_dim, (r0,...), (r1,...), ...
     Assumes all jobs share the same degree grid.
     """
-    archive_path = Path(archive_path)
+    source_path = Path(archive_path)
     out_csv_path = Path(output_csv)
 
-    with tempfile.TemporaryDirectory() as tmpd:
-        tmp = Path(tmpd)
-
-        # Handle both zip and tar.gz archives
-        if archive_path.suffix == '.zip' or archive_path.name.endswith('.zip'):
-            with zipfile.ZipFile(archive_path, 'r') as zf:
-                zf.extractall(tmp)
-        else:
-            with tarfile.open(archive_path, "r:gz") as tf:
-                tf.extractall(tmp)
-
-        # locate run root that has jobs/
-        candidates = [p for p in tmp.iterdir() if p.is_dir()]
-        if not candidates:
-            raise FileNotFoundError("Archive appears empty after extraction.")
-        run_root = next((c for c in candidates if (c / "jobs").is_dir()), None)
-        if run_root is None:
-            run_root = next((c.parent for c in candidates if c.name == "jobs"), None)
-        if run_root is None:
-            raise FileNotFoundError("Could not find a 'jobs/' directory in the archive.")
-
+    # Helper function to process jobs directory
+    def process_jobs_dir(run_root: Path):
         jobs_dir = run_root / "jobs"
         job_dirs = sorted([p for p in jobs_dir.iterdir() if p.is_dir()])
         if not job_dirs:
-            raise FileNotFoundError("No job folders found under jobs/ in the archive.")
+            raise FileNotFoundError("No job folders found under jobs/")
 
         all_degrees: List[Tuple[int, ...]] = []
         per_job_values: Dict[str, Dict[Tuple[int, ...], int]] = {}
@@ -588,7 +570,7 @@ def collect_hilbert_results(archive_path: str | os.PathLike = "run_results.tar.g
                 all_degrees = sorted(values.keys())
 
         if not per_job_values:
-            raise FileNotFoundError("No hf.csv files with data found in the archive.")
+            raise FileNotFoundError("No hf.csv files with data found.")
 
         deg_labels = [_degree_label(d) for d in all_degrees]
         fieldnames = ["job", "quiver", "module", "target_dim"] + deg_labels
@@ -609,5 +591,36 @@ def collect_hilbert_results(archive_path: str | os.PathLike = "run_results.tar.g
                 for d, lab in zip(all_degrees, deg_labels):
                     row[lab] = grid.get(d, "")
                 w.writerow(row)
+
+    # If source_path is a directory, use it directly
+    if source_path.is_dir():
+        if not (source_path / "jobs").is_dir():
+            raise FileNotFoundError(f"No 'jobs/' directory found in {source_path}")
+        process_jobs_dir(source_path)
+        return out_csv_path
+
+    # Otherwise, extract archive to temp directory
+    with tempfile.TemporaryDirectory() as tmpd:
+        tmp = Path(tmpd)
+
+        # Handle both zip and tar.gz archives
+        if source_path.suffix == '.zip' or source_path.name.endswith('.zip'):
+            with zipfile.ZipFile(source_path, 'r') as zf:
+                zf.extractall(tmp)
+        else:
+            with tarfile.open(source_path, "r:gz") as tf:
+                tf.extractall(tmp)
+
+        # locate run root that has jobs/
+        candidates = [p for p in tmp.iterdir() if p.is_dir()]
+        if not candidates:
+            raise FileNotFoundError("Archive appears empty after extraction.")
+        run_root = next((c for c in candidates if (c / "jobs").is_dir()), None)
+        if run_root is None:
+            run_root = next((c.parent for c in candidates if c.name == "jobs"), None)
+        if run_root is None:
+            raise FileNotFoundError("Could not find a 'jobs/' directory in the archive.")
+
+        process_jobs_dir(run_root)
 
     return out_csv_path
