@@ -35,6 +35,8 @@ setup(
     install_requires=[
         "numpy>=1.20.0",
         "networkx>=2.5.0",
+        "scipy>=1.6.0",
+        "matplotlib>=3.3.0",
         "galois>=0.3.0",
         "pyyaml>=5.4.0",
         "tqdm>=4.60.0",
