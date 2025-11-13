@@ -15,6 +15,7 @@ from pathlib import Path
 import numpy as np
 import csv
 from collections import defaultdict
+import deque
 
 
 def read_ranks_csv_strict(path: str | Path):
