@@ -11,6 +11,9 @@ from typing import Dict, Tuple, Union
 from pathlib import Path
 import networkx as nx
 import matplotlib.pyplot as plt
+import shutil
+import subprocess
+
 
 from .conjectures import read_edges_csv_strict, read_parsed_csv_strict
 
