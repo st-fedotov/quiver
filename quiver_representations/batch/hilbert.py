@@ -257,9 +257,40 @@ def _emit_hilbert_script(
     """
     Emit the Macaulay2 script that reuses Ifullsat via forceGB and writes HF CSV.
     Multidegrees are in vertex order and CSV header is r0,r1,...,hf.
+    Handles zero ideal case (no generators): computes HF of R directly.
     """
+    degs_txt = ",\n".join("  { " + ", ".join(map(str, d)) + " }" for d in degrees_vertex)
+    header   = ",".join(header_cols + ["hf"])
+
     if not gb_lines:
-        return 'error "parse_ifullsat_gb returned no generators for Ifullsat; cannot compute HF.";\n'
+        # Zero ideal case: no generators means I = (0), compute HF of R
+        return f'''-- === Auto Hilbert (blocks in vertex order: v=0,1,2,...) ===
+{ring_block}
+
+-- Zero ideal: no Plucker relations, computing HF of full ring
+Q = R;
+
+Degs = {{
+{degs_txt}
+}};
+
+OUT = openOut "{csv_path}";
+OUT << "{header}" << endl;
+
+for t from 0 to #Degs-1 do (
+  k = Degs#t;
+  d = hilbertFunction(k, Q);
+  for i from 0 to #k-1 do (
+    if i>0 then OUT << ",";
+    OUT << k#i
+  );
+  OUT << "," << d << endl;
+);
+close OUT;
+
+<< "Wrote " << #Degs << " rows to {csv_path} (zero ideal)" << endl;
+exit 0;
+'''
 
     gb_row   = ", ".join(gb_lines)
     degs_txt = ",\n".join("  { " + ", ".join(map(str, d)) + " }" for d in degrees_vertex)
