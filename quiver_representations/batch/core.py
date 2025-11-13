@@ -135,9 +135,6 @@ def write_batch_rad_from_triples(
     launcher_path.write_text(launcher_sh, encoding="utf-8")
     os.chmod(launcher_path, 0o755)
 
-    # Print the launcher so you can review/copy
-    print(launcher_sh)
-
     # Zip the entire run directory next to it and print the archive path
     # Result: batch_runs_rad/<run_id>.zip containing the whole run folder
     archive_base = str(run_dir)               # shutil will add .zip
