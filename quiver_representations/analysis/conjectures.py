@@ -358,21 +358,34 @@ def check_conjectures_write(
         mults_by_id[jid] = {k: v for k, v in mults[jid].items() if v}
 
 
-    # After computing reach = transitive_closure(ids, adj)
+    # Identify M^(0): the global source (degenerates to everyone)
+    N = len(ids)
+    M0_cands = [u for u in ids if len(reach.get(u, set())) == N - 1]
+    id_M0 = min(M0_cands) if M0_cands else None
 
-    #adj = read_edges_csv_strict(rank_dir / "edges.csv", ids, orientation=orientation)
-    #adj_rev = read_edges_csv_strict(rank_dir / "edges.csv", ids, orientation="specializes_from")
-    #reach_rev = transitive_closure(ids, adj_rev)
+    # Identify M^(1): the unique sink among jobs with irred_dims_list == [generic_dim]
+    single_generic = [jid for jid in ids
+                      if geom[jid]["irred_dims_list"] == [generic_dim]]
 
+    # Find sinks in this subset (nodes with no outgoing edges to others in the subset)
+    M1_cands = []
+    for v in single_generic:
+        # v is a sink if it doesn't degenerate to any other node in single_generic
+        has_succ = any((w != v and w in single_generic and w in reach.get(v, set()))
+                       for w in ids)
+        if not has_succ:
+            M1_cands.append(v)
 
+    id_M1 = M1_cands[0] if len(M1_cands) == 1 else None
 
-    # Then identify
-    id_M0, id_M1 = identify_M0_M1_orientation_aware(jobs, mults_by_id, reach)
     print("DEBUG: After identify_M0_M1, id_M0 =", id_M0, "id_M1 =", id_M1)
+    print(f"DEBUG: Found {len(single_generic)} modules with irred_dims=[{generic_dim}], {len(M1_cands)} sinks among them")
 
-
-    # Identify M^(0), M^(1) correctly (orientation-aware)
-    # id_M0, id_M1 = identify_M0_M1_orientation_aware(jobs, mults_by_id, reach)
+    if len(M1_cands) == 0:
+        print(f"WARNING: No sink found among modules with irred_dims=[{generic_dim}]")
+    elif len(M1_cands) > 1:
+        print(f"WARNING: Multiple sinks found among modules with irred_dims=[{generic_dim}]: {M1_cands}")
+        print(f"         Hypothesis fails - expected exactly one sink!")
 
     # Orientation sanity: M^(0) must reach all nodes (in degenerates_to orientation)
     if id_M0 is not None and len(reach[id_M0]) != len(ids) - 1:
