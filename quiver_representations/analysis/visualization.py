@@ -12,6 +12,8 @@ from pathlib import Path
 import networkx as nx
 import matplotlib.pyplot as plt
 
+from .conjectures import read_edges_csv_strict, read_parsed_csv_strict
+
 
 def _dot_layout_TB(G, prefer_pygraphviz=True, ranksep=1.1, nodesep=0.45, equally=True):
     """
