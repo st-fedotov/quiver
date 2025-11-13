@@ -34,6 +34,7 @@ setup(
     python_requires=">=3.8",
     install_requires=[
         "numpy>=1.20.0",
+        "networkx>=2.5.0",
         "galois>=0.3.0",
         "pyyaml>=5.4.0",
         "tqdm>=4.60.0",
