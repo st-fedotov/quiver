@@ -485,8 +485,6 @@ echo "All Hilbert jobs attempted."
     (dest / "run_all.sh").write_text(launcher_sh, encoding="utf-8")
     os.chmod(dest / "run_all.sh", 0o755)
 
-    shutil.make_archive(str(dest), "zip", root_dir=dest.parent, base_dir=dest.name)
-    print(f"Created archive: {dest.with_suffix('.zip')}")
     return dest
 
 
