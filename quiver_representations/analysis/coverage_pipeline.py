@@ -25,7 +25,7 @@ from .poset_an import build_dir_edges
 from ..batch.hilbert import write_hilbert_batch, collect_hilbert_results
 
 
-def process_coverage(Q, F, coverage_name, ambient_dim, target_dim, output_dir, workers, r_max, hilbert_workers):
+def process_coverage(Q, F, coverage_name, ambient_dim, target_dim, output_dir, workers, r_max, hilbert_workers, gc_heap_size):
     """
     Process a single coverage vector: enumerate jobs, run RAD, build poset, check conjectures, compute Hilbert functions.
 
@@ -33,12 +33,13 @@ def process_coverage(Q, F, coverage_name, ambient_dim, target_dim, output_dir, w
         Q: Quiver
         F: Field
         coverage_name: str, e.g., "coverage_missing_I0"
-        ambient_dim: dimension vector for P + I (coverage)
+        ambient_dim: dimension vector for P ⊕ I (coverage)
         target_dim: dimension vector for P (target in Grassmannian)
         output_dir: base output directory
         workers: number of workers for parallel rank poset
         r_max: maximum degree for Hilbert function computation
         hilbert_workers: number of workers for parallel Hilbert computation
+        gc_heap_size: GC initial heap size for Macaulay2 (e.g., "20G")
 
     Returns:
         coverage_dir: Path to the coverage directory
@@ -48,7 +49,7 @@ def process_coverage(Q, F, coverage_name, ambient_dim, target_dim, output_dir, w
 
     print(f"\n{'='*80}")
     print(f"Processing {coverage_name}")
-    print(f"Ambient dimension (P+I): {ambient_dim}")
+    print(f"Ambient dimension (P⊕I): {ambient_dim}")
     print(f"Target dimension (P): {target_dim}")
     print(f"{'='*80}\n")
 
@@ -82,9 +83,14 @@ def process_coverage(Q, F, coverage_name, ambient_dim, target_dim, output_dir, w
     if main_script.exists():
         shutil.copy(str(main_script), str(batch_rad_dir / "run_all_parallel.sh"))
 
+    env = os.environ.copy()
+    env["NUM_WORKERS"] = str(workers)
+    env["GC_INITIAL_HEAP_SIZE"] = gc_heap_size
+
     result = subprocess.run(
         ["bash", "run_all_parallel.sh"],
-        cwd=str(batch_rad_dir)
+        cwd=str(batch_rad_dir),
+        env=env
     )
     if result.returncode != 0:
         print(f"[{coverage_name}] WARNING: run_all_parallel.sh failed with code {result.returncode}")
@@ -207,6 +213,7 @@ def process_coverage(Q, F, coverage_name, ambient_dim, target_dim, output_dir, w
     # Set NUM_WORKERS environment variable and run the script
     env = os.environ.copy()
     env["NUM_WORKERS"] = str(hilbert_workers)
+    env["GC_INITIAL_HEAP_SIZE"] = gc_heap_size
 
     result = subprocess.run(
         ["bash", "run_all_parallel_hf.sh"],
