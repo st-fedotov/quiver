@@ -366,7 +366,6 @@ def write_batch_rad_from_dn_bags(
     # Reuse your batch emitter; will print run_all.sh and zip path.
     return write_batch_rad_from_triples(
         triples,
-        field=field,
         batch_root=batch_root,
         run_id=run_id,
         script_name=script_name,
