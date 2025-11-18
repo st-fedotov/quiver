@@ -368,6 +368,7 @@ def write_batch_rad_from_dn_bags(
         triples,
         batch_root=batch_root,
         run_id=run_id,
+        max_path_len_full_default=max_path_len_full_default,
         script_name=script_name,
         out_stdout=out_stdout,
         out_stderr=out_stderr,
