@@ -9,13 +9,15 @@ Provides functionality specific to D_n quiver types:
 
 from typing import List, Dict, Union
 from pathlib import Path
+from collections import defaultdict
 import numpy as np
 import csv
 from tqdm import tqdm
 
-from ..interval_modules.type_d import DnKind, DnIndec
+from ..field import FiniteField
+from ..interval_modules.type_d import DnKind, DnIndec, form_Dn_module_from_bag_explicit
 from .poset_utils import _hasse_edges
-
+from .hom import find_hom_basis
 
 def write_rank_poset_from_jobs_Dn(jobs, out_dir, p: int = 107):
     """
