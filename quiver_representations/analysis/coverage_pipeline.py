@@ -16,11 +16,9 @@ from ..interval_modules import (
     write_batch_rad_from_interval_bags_explicit,
     make_rad_jobs_for_An,
 )
-from .. import (
-    parse_quiver_jobs_rad,
-    visualize_degeneracy_dag,
-    check_conjectures,
-)
+from ..batch.parsers import parse_quiver_jobs_rad
+from .visualization import visualize_degeneracy_dag
+from .conjectures import check_conjectures
 from .poset_an import build_dir_edges
 from ..batch.hilbert import write_hilbert_batch, collect_hilbert_results
 
