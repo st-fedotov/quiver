@@ -9,9 +9,8 @@ Provides functions to compute dimensions of Hom spaces between:
 from typing import List, Tuple, TYPE_CHECKING
 import numpy as np
 
-if TYPE_CHECKING:
-    from ..module import Module
-    from ..morphism import Morphism
+from ..module import Module
+from ..morphism import Morphism
 
 
 def hom_interval(dir_edges, a, b, c, d):
