@@ -39,6 +39,14 @@ from .visualization import (
     visualize_degeneracy_dag,
 )
 
+from .coverage_pipeline import (
+    process_coverage,
+)
+
+from .coverage_pipeline_dn import (
+    process_coverage_dn,
+)
+
 __all__ = [
     "hom_interval",
     "hom_interval_to_bag",
@@ -56,4 +64,6 @@ __all__ = [
     "transitive_closure",
     "maximal_in_subset",
     "visualize_degeneracy_dag",
+    "process_coverage",
+    "process_coverage_dn",
 ]
