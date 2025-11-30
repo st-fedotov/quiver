@@ -505,3 +505,4 @@ def compute_injective_hull(
         defined_vertices.add(vertex_id)
 
     return inj_hull, hull_morphism
+
