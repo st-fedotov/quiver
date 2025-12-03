@@ -1,0 +1,27 @@
+# A3 sink quiver: 0 -> 1 <- 2
+# This is a type A quiver with arrows pointing toward the center vertex.
+
+name: a3_sink_analysis
+
+quiver:
+  name: A3_sink
+  vertices: [0, 1, 2]
+  arrows:
+    - [0, 1, a01]
+    - [2, 1, a21]
+
+coverage:
+  # Uniform multiplicity: 1 copy of each projective and injective
+  projective: 1
+  injective: 1
+
+  # Alternative: per-vertex specification
+  # projective: {0: 1, 1: 1, 2: 1}
+  # injective: {0: 1, 1: 1, 2: 1}
+
+runtime:
+  output_dir: ./results/a3_sink
+  workers: 32
+  hilbert_workers: 32
+  r_max: 3
+  gc_heap_size: 16G
