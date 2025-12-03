@@ -1,7 +1,6 @@
-# D4 quiver (4 vertices): 0 - 1, 1 - 2, 1 - 3
-# Branching at vertex n-3 = 1.
+# D4 quiver: 0 -> 1, 1 -> 2, 1 -> 3
 
-name: d4_analysis
+name: d4
 type: Dn
 
 quiver:
@@ -17,7 +16,7 @@ coverage:
   injective: 1
 
 runtime:
-  output_dir: ./results/d4
+  output_dir: ./results
   workers: 32
   hilbert_workers: 32
   r_max: 3

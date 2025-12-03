@@ -1,27 +1,21 @@
-# A3 quiver (3 vertices): 0 -> 1 -> 2 (or any orientation)
-# Vertices must be 0, 1, 2 with edges 0-1 and 1-2.
+# A3 sink quiver: 0 -> 1 <- 2
 
-name: a3_analysis
+name: a3_sink
 type: An
 
 quiver:
-  name: A3
+  name: A3_sink
   vertices: [0, 1, 2]
   arrows:
     - [0, 1, a01]
-    - [1, 2, a12]
+    - [2, 1, a21]
 
 coverage:
-  # Uniform multiplicity: 1 copy of each projective and injective
   projective: 1
   injective: 1
 
-  # Alternative: per-vertex specification
-  # projective: {0: 1, 1: 1, 2: 1}
-  # injective: {0: 1, 1: 1, 2: 1}
-
 runtime:
-  output_dir: ./results/a3
+  output_dir: ./results
   workers: 32
   hilbert_workers: 32
   r_max: 3

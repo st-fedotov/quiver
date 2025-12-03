@@ -98,8 +98,8 @@ Arrow orientations can be arbitrary.
 
 ## Example Configurations
 
-- `configs/a3_sink.yaml` - Type A_n quiver with 3 vertices
-- `configs/d4_star.yaml` - Type D_n quiver with 4 vertices
+- `configs/a3_sink.yaml` - A3 sink quiver: `0 -> 1 <- 2`
+- `configs/d4.yaml` - D4 quiver: `0 -> 1, 1 -> 2, 1 -> 3`
 
 ## Output
 
