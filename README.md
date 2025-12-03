@@ -78,7 +78,7 @@ pip install git+https://github.com/st-fedotov/quiver.git
 ### Basic Usage
 
 ```python
-from quiver_representations import Quiver, ComplexNumbers
+from quiver_representations import Quiver, FiniteField
 from quiver_representations.module import Module
 
 # Create an A3 quiver: 0 -> 1 -> 2
@@ -89,20 +89,28 @@ v2 = Q.add_vertex("2")
 Q.add_arrow(v0, v1, "a01")
 Q.add_arrow(v1, v2, "a12")
 
-# Work over complex numbers
-F = ComplexNumbers()
+# Work over finite field F_5
+F = FiniteField(5)
 
 # Create projective module at vertex 0
-P0, _ = Module.projective(Q, F, 0)
+P0, S0, _ = Module.projective(Q, F, 0)
 print(f"P(0) dimension vector: {P0.get_dimension_vector()}")
+# Output: {0: 1, 1: 1, 2: 1}
 
-# Create injective module at vertex 2
-I2, _ = Module.injective(Q, F, 2)
-print(f"I(2) dimension vector: {I2.get_dimension_vector()}")
+# Find its radical
+rad_P0, inclusion = P0.radical()
+print(f"rad P(0) dimension vector: {rad_P0.get_dimension_vector()}")
+# Output: {0: 0, 1: 1, 2: 1}
 
-# Direct sum
-M, _ = Module.direct_sum(P0, I2)
-print(f"P(0) + I(2) dimension vector: {M.get_dimension_vector()}")
+# Find quotient P/rad P via cokernel of the inclusion
+top_P0, _ = inclusion.cokernel()
+print(f"P(0)/rad P(0) dimension vector: {top_P0.get_dimension_vector()}")
+# Output: {0: 1, 1: 0, 2: 0}
+
+# Direct sum P(0) + P(0)/rad P(0)
+M, i1, i2, p1, p2 = Module.direct_sum(P0, top_P0)
+print(f"P(0) + P(0)/rad P(0) dimension vector: {M.get_dimension_vector()}")
+# Output: {0: 2, 1: 1, 2: 1}
 ```
 
 ### Grassmannian hypotheses checks
