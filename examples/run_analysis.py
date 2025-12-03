@@ -323,6 +323,7 @@ def run_pipeline(config: Dict[str, Any]) -> None:
         )
     else:  # Dn
         from quiver_representations.analysis.coverage_pipeline_dn import process_coverage_dn
+        from quiver_representations.interval_modules import make_rad_jobs_for_Dn
 
         coverage_dir = process_coverage_dn(
             Q, F, coverage_name, ambient_dim, p_dim, output_dir,
@@ -332,6 +333,40 @@ def run_pipeline(config: Dict[str, Any]) -> None:
             runtime["gc_heap_size"],
             runtime["hom_prime"],
         )
+
+        # Generate visualization for D_n (library skips this)
+        print(f"\nGenerating D_n visualization...")
+        try:
+            from quiver_representations.analysis.visualization import visualize_degeneracy_dag
+            import csv
+
+            # Regenerate jobs for visualization
+            _, jobs = make_rad_jobs_for_Dn(n_vertices, Q, coverage=ambient_dim, target_dim=p_dim)
+
+            # Read generic_dim from parsed.csv
+            parsed_csv_path = coverage_dir / "parsed.csv"
+            with open(parsed_csv_path, 'r') as f:
+                reader = csv.DictReader(f)
+                min_dim = float('inf')
+                for row in reader:
+                    irred_dims_str = row.get('irred_dims', '').strip()
+                    if irred_dims_str:
+                        dims = [int(x) for x in irred_dims_str.split()]
+                        if dims:
+                            min_dim = min(min_dim, min(dims))
+                generic_dim = min_dim if min_dim != float('inf') else 0
+
+            viz_output_base = coverage_dir / "degeneracy_dag"
+            visualize_degeneracy_dag(
+                jobs,
+                rank_dir=str(coverage_dir / "rank_poset"),
+                parsed_csv=str(parsed_csv_path),
+                out_base=str(viz_output_base),
+                magic_number=generic_dim,
+            )
+            print(f"Visualization saved: {viz_output_base}.svg")
+        except Exception as e:
+            print(f"WARNING: Visualization failed: {e}")
 
     # Create archive in current working directory
     print(f"\n{'=' * 80}")
