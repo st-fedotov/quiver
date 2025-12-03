@@ -304,6 +304,12 @@ def run_pipeline(config: Dict[str, Any]) -> None:
     print(f"Resolved config saved to: {config_out}")
     print()
 
+    # Copy required scripts to current working directory (library expects them there)
+    for script_name in ["run_all_parallel.sh", "run_all_parallel_hf.sh", "rank_poset_parallel.py"]:
+        if not Path(script_name).exists():
+            copy_script_to_dir(script_name, Path.cwd())
+            print(f"Copied {script_name} to current directory")
+
     # Run appropriate pipeline
     if quiver_type == "An":
         from quiver_representations.analysis.coverage_pipeline import process_coverage

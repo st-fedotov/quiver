@@ -54,7 +54,7 @@ Repository = "https://github.com/st-fedotov/quiver"
 Issues = "https://github.com/st-fedotov/quiver/issues"
 
 [tool.setuptools.package-data]
-quiver_representations = ["scripts/*.sh"]
+quiver_representations = ["scripts/*.sh", "scripts/*.py"]
 
 [tool.black]
 line-length = 100
