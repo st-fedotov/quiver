@@ -85,6 +85,8 @@ Constructs the degeneration poset (partial order) on the set of modules:
 - **For A_n:** Uses Hom-order via interval module combinatorics
 - **For D_n:** Uses Hom-matrix computations between indecomposables over a finite field **F_107**
 
+The poset is saved to `edges.csv`.
+
 ### Step 5b: Generate Visualization
 
 Creates a DAG visualization (`degeneracy_dag.svg`) of the Hasse diagram of the degeneration poset. Edges are color-coded:
@@ -94,20 +96,53 @@ Creates a DAG visualization (`degeneracy_dag.svg`) of the Hasse diagram of the d
 ### Step 6: Check Conjectures
 
 Analyzes the poset structure to verify mathematical conjectures:
-- **For A_n:** Checks conjectures about local minima and generic strata
-- **For D_n:** Reports local minima (sinks) in the degeneration poset
 
-### Step 7: Compute Hilbert Functions
+- **For A_n:** whether each representation from the *irreducible min dimensional locus* degenerate to **P⊕I** (`reports/conj1_check.csv`); reports sinks of the *min dimensional locus* (`reports/conj2_minimals.csv`).
+- **For D_n:** Reports sinks of the *irreducible min dimensional locus* (`dn_minima_single.csv`); sinks of the *min dimensional locus* (`reports/dn_minima_k_multi.csv`).
+
+### Step 7: Compute Hilbert function values
 
 Computes Hilbert functions for each stratum using Macaulay2, up to degree `r_max`. Results are collected into `hilbert_results.csv`.
 
-### Step 8: Check Hilbert Hypothesis
+### Step 8: Check Hilbert function hypothesis
 
-Verifies whether all modules with irreducible components of generic dimension have identical Hilbert sequences.
+Verifies whether all modules with irreducible components of generic dimension have identical Hilbert function values (`reports/conj3_hilbert.csv`).
 
-### Step 9: Create Archive
+### Step 9: Create archive
 
-Packages all results (excluding intermediate batch files) into `results.zip` in the current working directory.
+Packages all relevant results (excluding intermediate batch files) into `results.zip` in the current working directory. The structure of results.zip is:
+
+For **An**:
+
+```
+  ├── parsed.csv
+  ├── poset_input.json
+  ├── rank_poset/
+  │   ├── edges.csv
+  │   └── ranks.csv
+  ├── degeneracy_dag.dot
+  ├── degeneracy_dag.svg
+  ├── reports/
+  │   ├── conj1_minima.csv
+  │   ├── conj2_equidim.csv
+  │   └── conj3_hilbert.csv
+  └── hilbert_results.csv
+```
+
+For **Dn**:
+
+```
+  ├── parsed.csv
+  ├── rank_poset/
+  │   └── edges.csv
+  ├── degeneracy_dag.dot
+  ├── degeneracy_dag.svg
+  ├── reports/
+  │   ├── dn_minima_single.csv
+  │   ├── dn_minima_k_multi.csv
+  │   └── conj3_hilbert.csv
+  └── hilbert_results.csv
+```
 
 ## Configuration Format
 
