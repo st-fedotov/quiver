@@ -46,6 +46,10 @@ def load_config(config_path: str) -> Dict[str, Any]:
     # Validate required sections
     if "quiver" not in config:
         raise ValueError("Config must have a 'quiver' section")
+    if "type" not in config:
+        raise ValueError("Config must have a 'type' field ('An' or 'Dn')")
+    if config["type"] not in ("An", "Dn"):
+        raise ValueError(f"'type' must be 'An' or 'Dn', got: {config['type']}")
     if "coverage" not in config:
         raise ValueError("Config must have a 'coverage' section")
 
@@ -142,29 +146,56 @@ def get_dimension_vectors(Q: Quiver, F, np: Dict[int, int], ni: Dict[int, int]):
     return p_dim, PI.get_dimension_vector()
 
 
-def detect_quiver_type(Q: Quiver) -> str:
+def validate_quiver_structure(Q: Quiver, quiver_type: str) -> None:
     """
-    Detect if quiver is type A_n or D_n based on structure.
+    Validate that the quiver structure matches the declared type.
 
-    D_n quivers have a vertex with in-degree >= 2 (the "fork" vertex).
-    A_n quivers are linear chains.
+    Vertices MUST be numbered 0, 1, 2, ..., n-1.
 
-    Returns:
-        "Dn" or "An"
+    For A_n: edges must form a chain 0 - 1 - 2 - ... - (n-1)
+    For D_n: edges must form 0 - 2, 1 - 2, 2 - 3 - ... - (n-1)
+
+    Raises ValueError if structure doesn't match.
     """
-    vertices = Q.get_vertices()
-    arrows = Q.get_arrows()
+    vertices = sorted(Q.get_vertices())
+    n = len(vertices)
 
-    # Count in-degree for each vertex
-    in_degree: Dict[int, int] = {v: 0 for v in vertices}
-    for arrow in arrows:
-        dst = arrow[1]  # destination vertex
-        in_degree[dst] = in_degree.get(dst, 0) + 1
+    # Check vertices are 0, 1, ..., n-1
+    if vertices != list(range(n)):
+        raise ValueError(
+            f"Vertices must be numbered 0, 1, ..., {n-1}. Got: {vertices}"
+        )
 
-    # D_n has a vertex with in-degree >= 2
-    if any(deg >= 2 for deg in in_degree.values()):
-        return "Dn"
-    return "An"
+    # Build undirected adjacency set
+    edges = set()
+    for arrow_id in Q.get_arrows():
+        arrow = Q.arrows[arrow_id]
+        src, dst = arrow["source"], arrow["target"]
+        edges.add((min(src, dst), max(src, dst)))
+
+    if quiver_type == "An":
+        # Expected: 0-1, 1-2, 2-3, ..., (n-2)-(n-1)
+        expected = {(i, i + 1) for i in range(n - 1)}
+        if edges != expected:
+            raise ValueError(
+                f"A_n quiver must have edges 0-1, 1-2, ..., {n-2}-{n-1}. "
+                f"Got: {sorted(edges)}"
+            )
+
+    elif quiver_type == "Dn":
+        if n < 4:
+            raise ValueError(f"D_n requires at least 4 vertices, got {n}")
+        # Expected: 0-1, 1-2, ..., (n-4)-(n-3), (n-3)-(n-2), (n-3)-(n-1)
+        # Branching at vertex n-3
+        branch = n - 3
+        expected = {(i, i + 1) for i in range(branch)}  # chain 0-1-...-branch
+        expected.add((branch, n - 2))  # branch to n-2
+        expected.add((branch, n - 1))  # branch to n-1
+        if edges != expected:
+            raise ValueError(
+                f"D_n quiver must have chain 0-1-...-{branch} with branches to {n-2} and {n-1}. "
+                f"Got: {sorted(edges)}"
+            )
 
 
 def get_script_path(script_name: str) -> Path:
@@ -240,8 +271,9 @@ def run_pipeline(config: Dict[str, Any]) -> None:
     # Get dimension vectors
     p_dim, ambient_dim = get_dimension_vectors(Q, F, np, ni)
 
-    # Detect quiver type
-    quiver_type = detect_quiver_type(Q)
+    # Get quiver type from config and validate structure
+    quiver_type = config["type"]
+    validate_quiver_structure(Q, quiver_type)
 
     # Runtime settings
     runtime = config["runtime"]

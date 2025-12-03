@@ -13,17 +13,17 @@ This directory contains example scripts and configurations for running quiver an
 
 1. **Install the library:**
    ```bash
-   pip install quiver-representations
+   pip install git+https://github.com/st-fedotov/quiver.git@pre-launch-fix
    ```
 
 2. **Download the run script:**
    ```bash
-   curl -O https://raw.githubusercontent.com/st-fedotov/quiver/main/examples/run_analysis.py
+   curl -O https://raw.githubusercontent.com/st-fedotov/quiver/pre-launch-fix/examples/run_analysis.py
    ```
 
 3. **Create your config file** (or download an example):
    ```bash
-   curl -O https://raw.githubusercontent.com/st-fedotov/quiver/main/examples/configs/a3_sink.yaml
+   curl -O https://raw.githubusercontent.com/st-fedotov/quiver/pre-launch-fix/examples/configs/a3_sink.yaml
    ```
 
 4. **Run the analysis:**
@@ -33,26 +33,26 @@ This directory contains example scripts and configurations for running quiver an
 
 ## Configuration Format
 
-Configs are YAML files with three main sections:
+Configs are YAML files with these sections:
 
 ```yaml
-# Optional: name for this analysis run
-name: my_analysis
+name: my_analysis          # Optional: name for this analysis run
+type: An                   # REQUIRED: 'An' or 'Dn'
 
 quiver:
   name: MyQuiver           # Name for the quiver
-  vertices: [0, 1, 2]      # List of vertex labels
+  vertices: [0, 1, 2]      # Vertices MUST be 0, 1, 2, ..., n-1
   arrows:                  # List of [source, target, label] triples
     - [0, 1, a01]
     - [1, 2, a12]
 
 coverage:
-  projective: {0: 1, 1: 2, 2: 1}
-  injective: {0: 1, 1: 1, 2: 2}
+  projective: 1            # Uniform multiplicity, or per-vertex dict
+  injective: 1
 
-  # Or globally:
-  # projective: 1            # Multiplicity for projective modules
-  # injective: 1             # Multiplicity for injective modules
+  # Per-vertex example:
+  # projective: {0: 1, 1: 2, 2: 1}
+  # injective: {0: 1, 1: 1, 2: 2}
 
 runtime:
   output_dir: ./results    # Where to write output
@@ -60,22 +60,46 @@ runtime:
   hilbert_workers: 32      # Parallel workers for Hilbert computation
   r_max: 3                 # Maximum degree for Hilbert functions
   gc_heap_size: 16G        # Macaulay2 GC heap size
-  hom_prime: 107           # Prime for Hom computation (D_n quivers only)
+  hom_prime: 107           # Prime for Hom computation (D_n only)
 ```
+
+## Quiver Types and Vertex Numbering
+
+You must specify the quiver type explicitly via the `type` field.
+
+**Vertices must be numbered 0, 1, 2, ..., n-1** with specific edge structures:
+
+### Type A_n
+Edges must form a chain: `0-1, 1-2, 2-3, ..., (n-2)-(n-1)`
+
+```
+0 --- 1 --- 2 --- ... --- (n-1)
+```
+
+Arrow orientations can be arbitrary.
+
+### Type D_n (n >= 4)
+Edges must be: `0-1, 1-2, ..., (n-4)-(n-3), (n-3)-(n-2), (n-3)-(n-1)`
+
+Branching at vertex `n-3`:
+
+```
+                    (n-2)
+                   /
+0 --- 1 --- ... --- (n-3)
+                   \
+                    (n-1)
+```
+
+For D4: `0 - 1, 1 - 2, 1 - 3` (branch at vertex 1)
+For D5: `0 - 1, 1 - 2, 2 - 3, 2 - 4` (branch at vertex 2)
+
+Arrow orientations can be arbitrary.
 
 ## Example Configurations
 
-- `configs/a3_sink.yaml` - Type A quiver: `0 -> 1 <- 2`
-- `configs/d4_star.yaml` - Type D quiver: `0 -> 1, 2 -> 1, 1 -> 3`
-
-## Quiver Types
-
-The script automatically detects whether your quiver is type A_n or D_n based on its structure:
-
-- **Type A_n**: Linear or tree-like quivers where each vertex has in-degree at most 1
-- **Type D_n**: Quivers with a "fork" vertex that has in-degree >= 2
-
-Different analysis pipelines are used for each type.
+- `configs/a3_sink.yaml` - Type A_n quiver with 3 vertices
+- `configs/d4_star.yaml` - Type D_n quiver with 4 vertices
 
 ## Output
 
