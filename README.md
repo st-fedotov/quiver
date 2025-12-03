@@ -11,6 +11,10 @@ A Python library for computational experiments with quiver representations and q
 - **Hilbert functions**: Compute Hilbert functions for a quiver Grassmannian
 - **Support for A_n and D_n quivers**: Specialized algorithms for these Dynkin types
 
+**Note**. Quite curiously, implementation of module/morphism operations required a *categorical* point of view of them. For example, what does it mean to find a kernel of a morphism **f: M → N**? Just finding matrices of arrow maps in some of its basis isn't enough. We also want to know how the kernel is embedded into **M**. Thus, a kernel is not just a module but rather a pair **(ker(f), ı: ker(f) → M)**. 
+
+For just the same reason we don't just have a function for computing a quotient. Instead, you'll have to use `cokernel`. And every indecomposable projective module comes with the corresponding simple one and the projection onto it.
+
 ## Installation
 
 ### Python Package
@@ -92,7 +96,7 @@ Q.add_arrow(v1, v2, "a12")
 # Work over finite field F_5
 F = FiniteField(5)
 
-# Create projective module at vertex 0
+# Create an indecomposable projective module at vertex 0
 P0, S0, _ = Module.projective(Q, F, 0)
 print(f"P(0) dimension vector: {P0.get_dimension_vector()}")
 # Output: {0: 1, 1: 1, 2: 1}
