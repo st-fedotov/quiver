@@ -10,22 +10,16 @@ and checks conjectures for each coverage vector.
 
 import argparse
 import json
-import os
-import shutil
-import subprocess
-import sys
-import tempfile
 import zipfile
 from pathlib import Path
-from datetime import datetime
 
 from quiver_representations import ComplexNumbers
 from quiver_representations.module import Module
 from quiver_representations.analysis.coverage_pipeline_dn import process_coverage_dn
 from sample_pipelines.config import (
     PipelineConfig,
-    PipelineRuntime,
     build_quiver,
+    load_pipeline_config,
     make_dn_pipeline,
     pipeline_to_dict,
 )
@@ -125,74 +119,36 @@ def main():
         description="Quiver analysis pipeline for D_n quivers with P + I modules."
     )
     parser.add_argument(
-        "--n",
-        type=int,
-        default=4,
-        help="Number of vertices for the D_n quiver (default: 4)",
-    )
-    parser.add_argument(
-        "--output-dir",
+        "--config",
         type=str,
-        default="results",
-        help="Output directory for all results (default: results)"
-    )
-    parser.add_argument(
-        "--workers",
-        type=int,
-        default=64,
-        help="Number of workers for parallel RAD computation (default: 64)"
-    )
-    parser.add_argument(
-        "--r-max",
-        type=int,
-        default=3,
-        help="Maximum degree for Hilbert function computation (default: 3)"
-    )
-    parser.add_argument(
-        "--hilbert-workers",
-        type=int,
-        default=64,
-        help="Number of workers for parallel Hilbert computation (default: 64)"
-    )
-    parser.add_argument(
-        "--gc-heap-size",
-        type=str,
-        default="20G",
-        help="GC initial heap size for Macaulay2 (default: 20G)"
-    )
-    parser.add_argument(
-        "--hom-prime",
-        type=int,
-        default=107,
-        help="Prime p for GF(p) used in Hom computations (default: 107)"
+        help=(
+            "Path to a JSON pipeline config. If omitted, the built-in D_n default "
+            "(n=4, uniform coverage, default runtime) is used."
+        ),
     )
     args = parser.parse_args()
 
-    runtime = PipelineRuntime(
-        output_dir=args.output_dir,
-        workers=args.workers,
-        r_max=args.r_max,
-        hilbert_workers=args.hilbert_workers,
-        gc_heap_size=args.gc_heap_size,
-        hom_prime=args.hom_prime,
-    )
-
-    print("="*80)
+    print("=" * 80)
     print("D_n QUIVER ANALYSIS PIPELINE")
-    print("="*80)
-    print(f"Output directory: {Path(runtime.output_dir).absolute()}")
-    print(f"Workers (RAD): {runtime.workers}")
-    print(f"Workers (Hilbert): {runtime.hilbert_workers}")
-    print(f"R_max (Hilbert): {runtime.r_max}")
-    print(f"GC heap size: {runtime.gc_heap_size}")
-    print(f"Hom prime: {runtime.hom_prime}")
+    print("=" * 80)
+
+    if args.config:
+        pipeline_cfg = load_pipeline_config(args.config)
+    else:
+        pipeline_cfg = make_dn_pipeline(4)
+
+    print(
+        f"Config source: {'file ' + args.config if args.config else 'built-in default'}"
+    )
+    print(f"Output directory: {Path(pipeline_cfg.runtime.output_dir).absolute()}")
+    print(f"Workers (RAD): {pipeline_cfg.runtime.workers}")
+    print(f"Workers (Hilbert): {pipeline_cfg.runtime.hilbert_workers}")
+    print(f"R_max (Hilbert): {pipeline_cfg.runtime.r_max}")
+    print(f"GC heap size: {pipeline_cfg.runtime.gc_heap_size}")
+    print(f"Hom prime: {pipeline_cfg.runtime.hom_prime}")
     print()
 
     # Create quiver and field
-    try:
-        pipeline_cfg = make_dn_pipeline(args.n, runtime=runtime)
-    except ValueError as exc:
-        raise SystemExit(str(exc))
     Q = build_quiver(pipeline_cfg.quiver)
     F = ComplexNumbers()
 
@@ -249,6 +205,7 @@ def main():
     print("="*80)
     print("PIPELINE COMPLETE")
     print("="*80)
+
 
 
 if __name__ == "__main__":

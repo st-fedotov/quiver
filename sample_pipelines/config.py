@@ -1,4 +1,6 @@
+import json
 from dataclasses import asdict, dataclass
+from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 from quiver_representations import Quiver
@@ -169,3 +171,42 @@ def pipeline_to_dict(cfg: PipelineConfig) -> Dict:
     """Convenience helper for pretty-printing pipeline configs."""
 
     return asdict(cfg)
+
+
+def _coerce_int_keys(input_dict: Dict) -> Dict[int, int]:
+    """Ensure JSON-loaded dict keys become integers."""
+
+    return {int(k): int(v) for k, v in input_dict.items()}
+
+
+def pipeline_from_dict(data: Dict) -> PipelineConfig:
+    """Construct a :class:`PipelineConfig` from a plain dictionary."""
+
+    runtime = PipelineRuntime(**data.get("runtime", {}))
+    quiver_data = data["quiver"]
+    coverages_data = data.get("coverages", [])
+
+    quiver = QuiverConfig(
+        quiver_name=quiver_data["quiver_name"],
+        vertices=list(quiver_data["vertices"]),
+        arrows=[tuple(arrow) for arrow in quiver_data["arrows"]],
+    )
+
+    coverages = [
+        CoverageSpec(
+            name=coverage["name"],
+            np=_coerce_int_keys(coverage["np"]),
+            ni=_coerce_int_keys(coverage["ni"]),
+        )
+        for coverage in coverages_data
+    ]
+
+    return PipelineConfig(quiver=quiver, coverages=coverages, runtime=runtime)
+
+
+def load_pipeline_config(path: Path) -> PipelineConfig:
+    """Load a :class:`PipelineConfig` from a JSON file."""
+
+    with Path(path).open("r", encoding="utf-8") as f:
+        data = json.load(f)
+    return pipeline_from_dict(data)
