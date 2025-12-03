@@ -213,8 +213,9 @@ Arrow orientations can be arbitrary.
 
 ## Example Configurations
 
-- `configs/a3_sink.yaml` - A3 sink quiver: `0 -> 1 <- 2`
-- `configs/d4.yaml` - D4 quiver: `0 -> 1, 1 -> 2, 1 -> 3`
+- `configs/a3_sink.yaml` - A3 sink quiver: `0 -> 1 <- 2` with uniform coverage (1 of each P and I)
+- `configs/a3_custom_coverage.yaml` - A3 quiver with per-vertex multiplicities (e.g., `P_0 + 2*P_1 + P_2`)
+- `configs/d4.yaml` - D4 quiver: `0 -> 1, 1 -> 2, 1 -> 3` with uniform coverage
 
 ## Output Structure
 
