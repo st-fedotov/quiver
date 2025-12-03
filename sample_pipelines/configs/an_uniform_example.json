@@ -1,0 +1,61 @@
+{
+  "quiver": {
+    "quiver_name": "A5",
+    "vertices": [
+      "v0",
+      "v1",
+      "v2",
+      "v3",
+      "v4"
+    ],
+    "arrows": [
+      [
+        "v0",
+        "v1",
+        "a01"
+      ],
+      [
+        "v1",
+        "v2",
+        "a12"
+      ],
+      [
+        "v2",
+        "v3",
+        "a23"
+      ],
+      [
+        "v3",
+        "v4",
+        "a34"
+      ]
+    ]
+  },
+  "coverages": [
+    {
+      "name": "A5_uniform_P1_I1",
+      "np": {
+        "0": 1,
+        "1": 1,
+        "2": 1,
+        "3": 1,
+        "4": 1
+      },
+      "ni": {
+        "0": 1,
+        "1": 1,
+        "2": 1,
+        "3": 1,
+        "4": 1
+      }
+    }
+  ],
+  "runtime": {
+    "output_dir": "results/an5_uniform",
+    "workers": 32,
+    "r_max": 3,
+    "hilbert_workers": 32,
+    "gc_heap_size": "16G",
+    "hom_prime": null
+  }
+}
