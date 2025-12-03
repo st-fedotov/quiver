@@ -19,12 +19,10 @@ import zipfile
 from pathlib import Path
 from datetime import datetime
 
-from quiver_representations import (
-    ComplexNumbers,
-    Quiver,
-)
+from quiver_representations import ComplexNumbers
 from quiver_representations.module import Module
 from quiver_representations.analysis.coverage_pipeline import process_coverage
+from sample_pipelines.config import QuiverConfig, build_quiver
 
 
 def get_p_plus_i_dim_with_mult(Q, F, np: dict, ni: dict):
@@ -71,16 +69,14 @@ def get_p_plus_i_dim_with_mult(Q, F, np: dict, ni: dict):
     return p_dim, PI.get_dimension_vector()
 
 
-def create_quiver():
-    """Create the quiver (hardcoded example)."""
-    Q = Quiver("A3")
-    v0 = Q.add_vertex("v0")
-    v1 = Q.add_vertex("v1")
-    v2 = Q.add_vertex("v2")
-    Q.add_arrow(v0, v1, "a0")
-    Q.add_arrow(v1, v2, "a1")
-
-    return Q
+DEFAULT_QUIVER_CONFIG = QuiverConfig(
+    quiver_name="A3",
+    vertices=["v0", "v1", "v2"],
+    arrows=[
+        ("v0", "v1", "a0"),
+        ("v1", "v2", "a1"),
+    ],
+)
 
 
 def create_archive_excluding_jobs(source_dir, archive_path):
@@ -365,7 +361,7 @@ def main():
     print()
 
     # Create quiver and field
-    Q = create_quiver()
+    Q = build_quiver(DEFAULT_QUIVER_CONFIG)
     F = ComplexNumbers()
 
     print(f"Quiver: {Q.name}")
