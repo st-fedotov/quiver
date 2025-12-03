@@ -4,12 +4,11 @@ A Python library for computational experiments with quiver representations and q
 
 ## Features
 
-- **Quiver construction**: Build quivers with vertices and arrows
-- **Module operations**: Create projective/injective modules, compute direct sums, dimension vectors
-- **Morphism computations**: Find homomorphism bases between modules
-- **Quiver Grassmannians**: Analyze Grassmannian strata via radical computations
-- **Degeneration posets**: Construct and visualize partial orders on modules
-- **Hilbert functions**: Compute Hilbert functions of Grassmannian strata
+- **Quivers and modules**: Create custom quivers and representations over the field of complex numbers or over finite fields (based on the `galois` library); infer simple, projective, and injective modules. For now, the library only supports quivers without oriented cycles.
+- **Module and morphism operations**: Compute direct sums, kernels, images, radicals and socles, projective covers and injective hulls. Find a basis of **Hom_Q(M, N)** for given **M** and **N**. We recommed to use this functionality only over finite fields - over **C** every matrix is virtually full-rank due to errors in floating-point computations, so correctness isn't guaranteed.
+- **Quiver Grassmannians**: Create quiver Grassmannians. Infer equations cutting a quiver Grassmannian in a multi-projective space, as described in [this paper](https://arxiv.org/pdf/1607.01058).
+- **Degeneration posets**: Construct and visualize partial orders on modules with the same dimension vector given by the relation "**M** has **N** in the closure of its orbit".
+- **Hilbert functions**: Compute Hilbert functions for a quiver Grassmannian
 - **Support for A_n and D_n quivers**: Specialized algorithms for these Dynkin types
 
 ## Installation
@@ -17,14 +16,14 @@ A Python library for computational experiments with quiver representations and q
 ### Python Package
 
 ```bash
-pip install git+https://github.com/st-fedotov/quiver.git@pre-launch-fix
+pip install git+https://github.com/st-fedotov/quiver.git
 ```
 
 ### External Dependencies
 
 The library requires several external tools for full functionality:
 
-#### Macaulay2 (required for Grassmannian computations)
+#### Macaulay2 (required for computing geometric properties of quiver Grassmannians)
 
 **Ubuntu/Debian:**
 ```bash
@@ -71,7 +70,7 @@ brew install graphviz
 sudo apt install -y macaulay2 parallel graphviz
 
 # Install Python package
-pip install git+https://github.com/st-fedotov/quiver.git@pre-launch-fix
+pip install git+https://github.com/st-fedotov/quiver.git
 ```
 
 ## Quick Start
@@ -106,24 +105,9 @@ M, _ = Module.direct_sum(P0, I2)
 print(f"P(0) + I(2) dimension vector: {M.get_dimension_vector()}")
 ```
 
-### Running the Analysis Pipeline
+### Grassmannian hypotheses checks
 
-For comprehensive analysis of quiver Grassmannians, see the [examples](examples/) directory:
-
-```bash
-# Download the analysis script
-curl -O https://raw.githubusercontent.com/st-fedotov/quiver/pre-launch-fix/examples/run_analysis.py
-
-# Download an example config
-curl -O https://raw.githubusercontent.com/st-fedotov/quiver/pre-launch-fix/examples/configs/a3_sink.yaml
-
-# Run the analysis
-python run_analysis.py a3_sink.yaml
-```
-
-This runs the full pipeline: enumeration, radical computations, poset construction, visualization, conjecture checking, and Hilbert function computation.
-
-See [examples/README.md](examples/README.md) for detailed documentation.
+For examples of comprehensive analysis of quiver Grassmannians, see the [examples](examples/) directory.
 
 ## Project Structure
 
@@ -147,7 +131,5 @@ quiver_representations/
 ## License
 
 MIT License. See [LICENSE](LICENSE) for details.
-
-## Citation
 
 Paper forthcoming.
