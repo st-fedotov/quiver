@@ -22,7 +22,13 @@ from datetime import datetime
 from quiver_representations import ComplexNumbers
 from quiver_representations.module import Module
 from quiver_representations.analysis.coverage_pipeline_dn import process_coverage_dn
-from sample_pipelines.config import QuiverConfig, build_quiver
+from sample_pipelines.config import (
+    PipelineConfig,
+    PipelineRuntime,
+    build_quiver,
+    make_dn_pipeline,
+    pipeline_to_dict,
+)
 
 
 def get_p_plus_i_dim_with_mult(Q, F, np: dict, ni: dict):
@@ -69,17 +75,6 @@ def get_p_plus_i_dim_with_mult(Q, F, np: dict, ni: dict):
     return p_dim, PI.get_dimension_vector()
 
 
-DEFAULT_QUIVER_CONFIG = QuiverConfig(
-    quiver_name="D4",
-    vertices=["v0", "v1", "v2", "v3"],
-    arrows=[
-        ("v0", "v1", "a01"),
-        ("v1", "v2", "a12"),
-        ("v1", "v3", "a13"),
-    ],
-)
-
-
 def create_archive_excluding_jobs(source_dir, archive_path):
     """
     Create a zip archive of source_dir excluding batch computation directories.
@@ -110,115 +105,30 @@ def create_archive_excluding_jobs(source_dir, archive_path):
 
     return archive_path
 
-'''
-def generate_coverage_specs(Q, F):
+def generate_coverage_specs(Q, F, pipeline_cfg: PipelineConfig):
     """
-    Generate coverage specifications for all variants of P + I.
+    Build coverage tuples from declarative specs.
 
     Returns:
         list of (name, np, ni, ambient_dim, target_dim) tuples
     """
-    n_vertices = len(Q.get_vertices())
-
-    # All projectives have multiplicity 1
-    np_all = {i: 1 for i in range(n_vertices)}
 
     coverages = []
-    for missing_inj in range(n_vertices):
-        # All injectives except one
-        ni = {i: 1 for i in range(n_vertices)}
-        ni[missing_inj] = 0
-
-        p_dim, ambient_dim = get_p_plus_i_dim_with_mult(Q, F, np_all, ni)
-
-        name = f"coverage_missing_I{missing_inj}"
-        coverages.append((name, np_all, ni, ambient_dim, p_dim))
-
-    return coverages
-'''
-
-'''
-def generate_coverage_specs(Q, F):
-    """
-    Generate coverage specifications for all variants of P + I.
-
-    Returns:
-        list of (name, np, ni, ambient_dim, target_dim) tuples
-    """
-    n_vertices = len(Q.get_vertices())
-
-    # All injectives have multiplicity 1
-    ni = {i: 1 for i in range(n_vertices)}
-
-    coverages = []
-    for missing_proj in range(n_vertices):
-        # All injectives except one
-        np = {i: 1 for i in range(n_vertices)}
-        np[missing_proj] = 0
-
-        p_dim, ambient_dim = get_p_plus_i_dim_with_mult(Q, F, np, ni)
-
-        name = f"coverage_missing_P{missing_proj}"
-        coverages.append((name, np, ni, ambient_dim, p_dim))
-
-    return coverages
-'''
-
-'''
-def generate_coverage_specs(Q, F):
-    """
-    Generate coverage specifications for all variants of P + I.
-
-    Returns:
-        list of (name, np, ni, ambient_dim, target_dim) tuples
-    """
-    n_vertices = len(Q.get_vertices())
-
-    # All projectives have multiplicity 1
-    np = {i: 1 for i in range(n_vertices)}
-
-    coverages = []
-    for extra_inj in range(n_vertices):
-        # All injectives except one
-        ni = {i: 1 for i in range(n_vertices)}
-        ni[extra_inj] = 2
-
-        p_dim, ambient_dim = get_p_plus_i_dim_with_mult(Q, F, np, ni)
-
-        name = f"coverage_extra_I{extra_inj}"
-        coverages.append((name, np, ni, ambient_dim, p_dim))
-
-    return coverages
-'''
-
-def generate_coverage_specs(Q, F):
-    """
-    Generate coverage specifications for all variants of P + I.
-
-    Returns:
-        list of (name, np, ni, ambient_dim, target_dim) tuples
-    """
-    n_vertices = len(Q.get_vertices())
-
-    # All injectives have multiplicity 1
-    ni = {i: 1 for i in range(n_vertices)}
-
-    coverages = []
-    for extra_proj in range(n_vertices):
-        # All projectives except one
-        np = {i: 1 for i in range(n_vertices)}
-        np[extra_proj] = 2
-
-        p_dim, ambient_dim = get_p_plus_i_dim_with_mult(Q, F, np, ni)
-
-        name = f"coverage_extra_P{extra_proj}"
-        coverages.append((name, np, ni, ambient_dim, p_dim))
+    for spec in pipeline_cfg.coverages:
+        p_dim, ambient_dim = get_p_plus_i_dim_with_mult(Q, F, spec.np, spec.ni)
+        coverages.append((spec.name, spec.np, spec.ni, ambient_dim, p_dim))
 
     return coverages
 
 def main():
     parser = argparse.ArgumentParser(
         description="Quiver analysis pipeline for D_n quivers with P + I modules."
+    )
+    parser.add_argument(
+        "--n",
+        type=int,
+        default=4,
+        help="Number of vertices for the D_n quiver (default: 4)",
     )
     parser.add_argument(
         "--output-dir",
@@ -258,30 +168,48 @@ def main():
     )
     args = parser.parse_args()
 
-    output_dir = Path(args.output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
+    runtime = PipelineRuntime(
+        output_dir=args.output_dir,
+        workers=args.workers,
+        r_max=args.r_max,
+        hilbert_workers=args.hilbert_workers,
+        gc_heap_size=args.gc_heap_size,
+        hom_prime=args.hom_prime,
+    )
 
     print("="*80)
     print("D_n QUIVER ANALYSIS PIPELINE")
     print("="*80)
-    print(f"Output directory: {output_dir.absolute()}")
-    print(f"Workers (RAD): {args.workers}")
-    print(f"Workers (Hilbert): {args.hilbert_workers}")
-    print(f"R_max (Hilbert): {args.r_max}")
-    print(f"GC heap size: {args.gc_heap_size}")
-    print(f"Hom prime: {args.hom_prime}")
+    print(f"Output directory: {Path(runtime.output_dir).absolute()}")
+    print(f"Workers (RAD): {runtime.workers}")
+    print(f"Workers (Hilbert): {runtime.hilbert_workers}")
+    print(f"R_max (Hilbert): {runtime.r_max}")
+    print(f"GC heap size: {runtime.gc_heap_size}")
+    print(f"Hom prime: {runtime.hom_prime}")
     print()
 
     # Create quiver and field
-    Q = build_quiver(DEFAULT_QUIVER_CONFIG)
+    try:
+        pipeline_cfg = make_dn_pipeline(args.n, runtime=runtime)
+    except ValueError as exc:
+        raise SystemExit(str(exc))
+    Q = build_quiver(pipeline_cfg.quiver)
     F = ComplexNumbers()
+
+    cfg_dict = pipeline_to_dict(pipeline_cfg)
+    print("Resolved pipeline configuration:")
+    print(json.dumps(cfg_dict, indent=2))
+    print()
+
+    output_dir = Path(pipeline_cfg.runtime.output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     print(f"Quiver: {Q.name}")
     print(f"Vertices: {len(Q.get_vertices())}")
     print()
 
     # Generate coverage specifications
-    coverages = generate_coverage_specs(Q, F)
+    coverages = generate_coverage_specs(Q, F, pipeline_cfg)
     print(f"Generated {len(coverages)} coverage vectors:")
     for name, _, _, ambient_dim, p_dim in coverages:
         print(f"  - {name}: ambient={ambient_dim}, target={p_dim}")
@@ -293,8 +221,11 @@ def main():
         try:
             coverage_dir = process_coverage_dn(
                 Q, F, coverage_name, ambient_dim, target_dim, output_dir,
-                args.workers, args.r_max, args.hilbert_workers, args.gc_heap_size,
-                args.hom_prime
+                pipeline_cfg.runtime.workers,
+                pipeline_cfg.runtime.r_max,
+                pipeline_cfg.runtime.hilbert_workers,
+                pipeline_cfg.runtime.gc_heap_size,
+                pipeline_cfg.runtime.hom_prime,
             )
             coverage_dirs.append(coverage_dir)
         except Exception as e:
