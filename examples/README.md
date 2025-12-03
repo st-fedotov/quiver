@@ -5,7 +5,7 @@ This directory contains example scripts and configurations for running quiver an
 ## Requirements
 
 - Python 3.8+
-- `quiver-representations` library: `pip install quiver-representations`
+- `quiver-representations` library
 - [GNU parallel](https://www.gnu.org/software/parallel/)
 - [Macaulay2](https://www.macaulay2.com/) (M2)
 
@@ -47,12 +47,12 @@ quiver:
     - [1, 2, a12]
 
 coverage:
-  projective: 1            # Multiplicity for projective modules
-  injective: 1             # Multiplicity for injective modules
+  projective: {0: 1, 1: 2, 2: 1}
+  injective: {0: 1, 1: 1, 2: 2}
 
-  # Or per-vertex:
-  # projective: {0: 1, 1: 2, 2: 1}
-  # injective: {0: 1, 1: 1, 2: 2}
+  # Or globally:
+  # projective: 1            # Multiplicity for projective modules
+  # injective: 1             # Multiplicity for injective modules
 
 runtime:
   output_dir: ./results    # Where to write output
