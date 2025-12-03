@@ -16,7 +16,7 @@ from ..batch.core import write_batch_rad_from_triples
 
 
 class DnKind(IntEnum):
-    SEG  = 0   # [i, j]        (thin path on the spine; leaves 0,0); covers i..min(j-1, br)
+    SEG  = 0   # [i, j]        (thin path on the spine; leaves 0,0); covers i..min(j, br)
     UP   = 1   # [i, up]       (spine i..br = 1; up-leaf = 1);  i==up_leaf => pure up simple
     DOWN = 2   # [i, down]     (spine i..br = 1; dn-leaf = 1);  i==dn_leaf => pure down simple
     BOTH = 3   # [i, both]     (spine i..br = 1; leaves up=1,down=1; requires i <= br)
@@ -61,20 +61,24 @@ def form_Dn_module_from_bag_explicit(
     # ---- validation ----
     for x in bag:
         if x.kind == DnKind.SEG:
-            if not (0 <= x.i < x.j <= n - 1):
-                raise ValueError(f"[i,j]: need 0 <= i < j <= n-1, got {x}.")
+            # SEG [i,j] covers spine positions i..j, so need 0 <= i <= j <= br
+            if not (0 <= x.i <= x.j <= br):
+                raise ValueError(f"[i,j]: need 0 <= i <= j <= br ({br}), got {x}.")
         elif x.kind == DnKind.UP:
-            if not (0 <= x.i <= up_leaf):
-                raise ValueError(f"[i,up]: need 0 <= i <= up_leaf ({up_leaf}), got {x}.")
+            # UP [i,up]: i <= br covers spine [i..br] + up_leaf; i == up_leaf is pure simple
+            if not (0 <= x.i <= br or x.i == up_leaf):
+                raise ValueError(f"[i,up]: need 0 <= i <= br ({br}) or i == up_leaf ({up_leaf}), got {x}.")
         elif x.kind == DnKind.DOWN:
-            if not (0 <= x.i <= dn_leaf):
-                raise ValueError(f"[i,down]: need 0 <= i <= dn_leaf ({dn_leaf}), got {x}.")
+            # DOWN [i,down]: i <= br covers spine [i..br] + dn_leaf; i == dn_leaf is pure simple
+            if not (0 <= x.i <= br or x.i == dn_leaf):
+                raise ValueError(f"[i,down]: need 0 <= i <= br ({br}) or i == dn_leaf ({dn_leaf}), got {x}.")
         elif x.kind == DnKind.BOTH:
             if not (0 <= x.i <= br):
                 raise ValueError(f"[i,both]: need 0 <= i <= br ({br}), got {x}.")
         elif x.kind == DnKind.STAR:
-            if not (0 <= x.i < x.j <= n - 2):
-                raise ValueError(f"[i,j*]: need 0 <= i < j <= n-2, got {x}.")
+            # STAR [i,j*]: j must be <= br for the thick part to exist
+            if not (0 <= x.i < x.j <= br):
+                raise ValueError(f"[i,j*]: need 0 <= i < j <= br ({br}), got {x}.")
         else:
             raise ValueError(f"Unknown kind: {x.kind}")
 
@@ -83,10 +87,9 @@ def form_Dn_module_from_bag_explicit(
     for x in bag:
         w = [0] * n
         if x.kind == DnKind.SEG:
-            r = min(x.j - 1, br)
-            if x.i <= r:
-                for p in range(x.i, r + 1):
-                    w[p] = 1
+            # SEG [i,j] covers spine positions i..j
+            for p in range(x.i, x.j + 1):
+                w[p] = 1
         elif x.kind == DnKind.UP:
             if x.i <= br:
                 for p in range(x.i, br + 1):
@@ -98,9 +101,12 @@ def form_Dn_module_from_bag_explicit(
             if x.i <= br:
                 for p in range(x.i, br + 1):
                     w[p] = 1
-            elif x.i != dn_leaf:
+                w[dn_leaf] = 1
+            elif x.i == dn_leaf:
+                # [dn_leaf, down] is the simple module at dn_leaf
+                w[dn_leaf] = 1
+            else:
                 raise ValueError(f"DOWN(i): i must be <= br or == dn_leaf; got {x}.")
-            w[dn_leaf] = 1
         elif x.kind == DnKind.BOTH:
             for p in range(x.i, br + 1):
                 w[p] = 1
