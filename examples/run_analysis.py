@@ -333,12 +333,12 @@ def run_pipeline(config: Dict[str, Any]) -> None:
             runtime["hom_prime"],
         )
 
-    # Create archive
+    # Create archive in current working directory
     print(f"\n{'=' * 80}")
     print("Creating archive (excluding batch directories)...")
     print(f"{'=' * 80}\n")
 
-    archive_path = output_dir / "results.zip"
+    archive_path = Path.cwd() / "results.zip"
     create_archive_excluding_jobs(output_dir, archive_path)
 
     archive_size_mb = archive_path.stat().st_size / (1024 * 1024)
