@@ -34,34 +34,56 @@ This directory contains example scripts and configurations for running quiver an
 
 ## What the Pipeline Does
 
-The `run_analysis.py` script performs a complete analysis of quiver Grassmannians for a given quiver and coverage vector. The pipeline consists of the following steps:
+The `run_analysis.py` script requires as an input a `yaml` file with the following information:
+
+* Quiver type (currently supports **An** or **Dn**) and orientation
+* Multiplicities of indecomposables in a projective representation **P** and an injective representation **I**, given explicitly as:
+
+  ```
+  coverage:
+    projective: {0: 1, 1: 2, 2: 1}
+    injective: {0: 1, 1: 1, 2: 2}
+  ```
+
+  or generally as
+
+  ```
+  coverage:
+    projective: 1
+    injective: 1
+  ```
+
+The script performs a series of computations and checks for quiver Grassmannians **Gr_d(M)** with **d = dim(P)** over all representations **M** with dimension vector **dim(P⊕I)**.
+
+The pipeline consists of the following steps:
 
 ### Step 1: Enumerate Indecomposable Bags
 
-Enumerates all possible multisets (bags) of indecomposable modules that sum to the given coverage dimension vector. Each bag represents a potential module M in the quiver Grassmannian.
+Enumerates all possible multisets (bags) of indecomposable modules that sum to the given coverage dimension vector. 
 
-### Step 2: Write Batch RAD Jobs
+### Step 2: Write "RAD" jobs
 
-For each bag, generates Macaulay2 scripts to compute the radical (RAD) of the corresponding quiver Grassmannian stratum. These are written as batch jobs for parallel execution.
+For each bag, writes all Plücker and incidence relations and generates Macaulay2 scripts to compute 
 
-### Step 3: Run Parallel RAD Computations
+* Gröbner basis for reduced and saturated ideal cutting **Gr_d(M)**
+* Dimensions of irreducible components of **Gr_d(M)**
 
-Executes the Macaulay2 radical computations in parallel using GNU parallel. This is the most computationally intensive step.
+### Step 3: Run parallel computations of "RAD" jobs with Macaulay 2
+
+Executes the Macaulay2 radical computations in parallel using GNU parallel. This is one of two most computationally intensive steps.
 
 ### Step 4: Parse Results
 
 Parses the output of RAD computations into a structured CSV format (`parsed.csv`), extracting:
 - Irreducible component dimensions (`irred_dims`)
 - Equidimensionality information
-- Other geometric properties
+- Some other geometric properties
 
 ### Step 5: Build Rank Poset
 
 Constructs the degeneration poset (partial order) on the set of modules:
 - **For A_n:** Uses Hom-order via interval module combinatorics
-- **For D_n:** Uses Hom-matrix computations between indecomposables
-
-The poset captures which modules degenerate to which others.
+- **For D_n:** Uses Hom-matrix computations between indecomposables over a finite field **F_107**
 
 ### Step 5b: Generate Visualization
 
