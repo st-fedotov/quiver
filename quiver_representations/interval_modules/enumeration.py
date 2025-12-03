@@ -216,11 +216,11 @@ def enumerate_Dn_bags_from_coverage_iter(coverage: Dict[int, int]) -> Iterator[B
 
     Conventions (match your builder):
       - n = max(coverage)+1, br = n-3 is the branch; leaves are up_leaf = n-2 and dn_leaf = n-1.
-      - SEG(i,j): 1 on spine p in [i..min(j-1, br)].
+      - SEG[i,j]: 1 on spine p in [i..j] (closed interval, 0 <= i <= j <= br).
       - UP(i):    i<=br -> 1 on spine [i..br], +1 on up_leaf; i==up_leaf -> pure up simple.
       - DOWN(i):  i<=br -> 1 on spine [i..br], +1 on dn_leaf; i==dn_leaf -> pure down simple.
       - BOTH(i):  i<=br -> 1 on spine [i..br], +1 on both leaves.
-      - STAR(i,j): i<j<=n-2: 1 on [i..min(j-1,br)], 2 on [j..br], +1 on both leaves.
+      - STAR[i,j*]: 0 <= i < j <= br: 1 on [i..j-1], 2 on [j..br], +1 on both leaves.
 
     Deterministic; no in-place mutation and no backtracking/undo. Spine invariants enforced exactly.
     """
@@ -262,8 +262,10 @@ def enumerate_Dn_bags_from_coverage_iter(coverage: Dict[int, int]) -> Iterator[B
 
     def add_seg(bag: Bag, i: int, j: int, t: int) -> Bag:
         if t == 0: return bag
-        # j can be br+1; SEG covers i..min(j-1,br) so SEG(i, br+1) is the branch simple at i==br.
-        return bag + [DnIndec(DnKind.SEG, i, j)] * t
+        # Enumeration uses half-open [i, j), but DnIndec uses closed [i, j].
+        # Convert: SEG covering spine [i..j-1] becomes DnIndec(SEG, i, j-1).
+        # j can be br+1 (so j-1 = br), making SEG(i, br) valid.
+        return bag + [DnIndec(DnKind.SEG, i, j - 1)] * t
 
     def add_star(bag: Bag, i: int, j: int, t: int) -> Bag:
         if t == 0: return bag
@@ -294,9 +296,8 @@ def enumerate_Dn_bags_from_coverage_iter(coverage: Dict[int, int]) -> Iterator[B
             k = x.kind
             i, j = x.i, x.j
             if k == DnKind.SEG:
-                r = min(j - 1, br)
-                if i <= r:
-                    for p in range(i, r+1): cov[p] += 1
+                # SEG[i,j] covers closed interval [i..j], with 0 <= i <= j <= br
+                for p in range(i, j + 1): cov[p] += 1
             elif k == DnKind.UP:
                 if i <= br:
                     for p in range(i, br+1): cov[p] += 1
