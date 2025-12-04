@@ -176,6 +176,8 @@ runtime:
   hom_prime: 107            # Prime for Hom computation (D_n only)
 ```
 
+The bulk of our experiments were done on a [Nebius](https://nebius.com/)' virtual machine with 128 CPU and 512Gb RAM. Depending on the memory requirements, we used between 30 and 120 parallel computational streams. Though the default `r_max` is 3, we recommend decreasing it for compute-intensive tasks.
+
 ## Quiver Types and Vertex Numbering
 
 You must specify the quiver type explicitly via the `type` field.
