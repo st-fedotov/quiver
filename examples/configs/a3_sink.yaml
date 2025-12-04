@@ -1,0 +1,22 @@
+# A3 sink quiver: 0 -> 1 <- 2
+
+name: a3_sink
+type: An
+
+quiver:
+  name: A3_sink
+  vertices: [0, 1, 2]
+  arrows:
+    - [0, 1, a01]
+    - [2, 1, a21]
+
+coverage:
+  projective: 1
+  injective: 1
+
+runtime:
+  output_dir: ./results
+  workers: 32
+  hilbert_workers: 32
+  r_max: 3
+  gc_heap_size: 16G

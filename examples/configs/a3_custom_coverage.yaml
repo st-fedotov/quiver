@@ -1,0 +1,25 @@
+# A3 quiver with custom coverage multiplicities
+# Demonstrates per-vertex projective and injective multiplicities
+
+name: a3_custom
+type: An
+
+quiver:
+  name: A3
+  vertices: [0, 1, 2]
+  arrows:
+    - [0, 1, a01]
+    - [1, 2, a12]
+
+coverage:
+  # Per-vertex multiplicities: vertex_id -> count
+  # This gives P = P_0 + 2*P_1 + P_2 and I = I_0 + I_1 + 2*I_2
+  projective: {0: 1, 1: 2, 2: 1}
+  injective: {0: 1, 1: 1, 2: 2}
+
+runtime:
+  output_dir: ./results
+  workers: 32
+  hilbert_workers: 32
+  r_max: 3
+  gc_heap_size: 16G
