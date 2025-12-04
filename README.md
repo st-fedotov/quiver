@@ -125,19 +125,42 @@ For examples of comprehensive analysis of quiver Grassmannians, see the [example
 
 ```
 quiver_representations/
-├── quiver.py              # Quiver class
-├── module.py              # Module class and operations
-├── morphism.py            # Morphism computations
-├── field.py               # Field implementations (Complex, Finite)
-├── analysis/              # Grassmannian analysis tools
-│   ├── coverage_pipeline.py     # A_n analysis pipeline
-│   ├── coverage_pipeline_dn.py  # D_n analysis pipeline
-│   ├── visualization.py         # DAG visualization
-│   └── conjectures.py           # Conjecture checking
-├── interval_modules/      # Interval module enumeration
-├── grassmannians/         # Quiver Grassmannian computations
-├── batch/                 # Batch job management
-└── scripts/               # Shell scripts for parallel execution
+├── quiver.py                 # Quiver class
+├── module.py                 # Module class
+├── module_algorithms.py      # Module operations (radical, socle, etc.)
+├── morphism.py               # Morphism class
+├── morphism_algorithms.py    # Morphism operations (kernel, cokernel, etc.)
+├── field.py                  # Field implementations (ComplexNumbers, FiniteField)
+├── representation.py         # Representation utilities
+├── analysis/                 # Grassmannian analysis tools
+│   ├── coverage_pipeline.py       # A_n analysis pipeline
+│   ├── coverage_pipeline_dn.py    # D_n analysis pipeline
+│   ├── poset_an.py                # A_n poset construction
+│   ├── poset_dn.py                # D_n poset construction
+│   ├── poset_utils.py             # Shared poset utilities
+│   ├── hom.py                     # Hom space computations
+│   ├── visualization.py           # DAG visualization
+│   └── conjectures.py             # Conjecture checking
+├── interval_modules/         # Interval module enumeration
+│   ├── enumeration.py             # Bag enumeration algorithms
+│   ├── type_a.py                  # A_n interval modules
+│   └── type_d.py                  # D_n indecomposables
+├── grassmannians/            # Quiver Grassmannian computations
+│   ├── quiver_grassmannian.py     # Main Grassmannian class
+│   ├── plucker.py                 # Plücker relations
+│   ├── classical.py               # Classical Grassmannian utilities
+│   └── utils.py                   # Helper functions
+├── batch/                    # Batch job management
+│   ├── core.py                    # Core batch functionality
+│   ├── hilbert.py                 # Hilbert function batch jobs
+│   └── parsers.py                 # Result parsing
+├── scripts/                  # Scripts for parallel execution
+│   ├── run_all_parallel.sh        # Parallel RAD computation
+│   ├── run_all_parallel_hf.sh     # Parallel Hilbert computation
+│   └── rank_poset_parallel.py     # Parallel poset construction
+└── utils/                    # General utilities
+    ├── field_conversion.py        # Field conversion helpers
+    └── paths.py                   # Path utilities
 ```
 
 ## License
