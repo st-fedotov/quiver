@@ -47,7 +47,7 @@ def write_rank_poset_from_jobs_Dn(jobs, out_dir, p: int = 107):
     br, up_leaf, dn_leaf = n - 3, n - 2, n - 1
     indecs: list[DnIndec] = []
     for i in range(0, br + 1):
-        for j in range(i + 1, br + 2):             # SEG
+        for j in range(i, br + 1):             # SEG: closed [i, j], 0 <= i <= j <= br
             indecs.append(DnIndec(DnKind.SEG, i, j))
     for i in range(0, br + 1):                 # UP/DOWN/BOTH (spine starts)
         indecs.append(DnIndec(DnKind.UP, i))
