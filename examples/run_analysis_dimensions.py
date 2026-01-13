@@ -89,16 +89,17 @@ def parse_dimension_vector(
     spec: Any,
     n_vertices: int,
     name: str,
-) -> List[int]:
-    """Parse explicit dimension vectors from list/tuple or dict."""
+) -> Dict[int, int]:
+    """Parse explicit dimension vectors from list/tuple or dict into a dense map."""
     if isinstance(spec, (list, tuple)):
         if len(spec) != n_vertices:
             raise ValueError(
                 f"{name} must have length {n_vertices}, got {len(spec)}"
             )
         dims = [int(value) for value in spec]
+        dim_map = {i: dims[i] for i in range(n_vertices)}
     elif isinstance(spec, dict):
-        spec_map = {int(k): v for k, v in spec.items()}
+        spec_map = {int(k): int(v) for k, v in spec.items()}
         keys = set(spec_map.keys())
         expected = set(range(n_vertices))
         if keys != expected:
@@ -108,7 +109,8 @@ def parse_dimension_vector(
                 f"{name} must specify exactly vertices {sorted(expected)}; "
                 f"missing {sorted(missing)}, extra {sorted(extra)}"
             )
-        dims = [int(spec_map[i]) for i in range(n_vertices)]
+        dim_map = {i: spec_map[i] for i in range(n_vertices)}
+        dims = [dim_map[i] for i in range(n_vertices)]
     else:
         raise ValueError(
             f"{name} must be a list/tuple or dict of vertex dimensions, got: {spec}"
@@ -117,11 +119,11 @@ def parse_dimension_vector(
     if any(value < 0 for value in dims):
         raise ValueError(f"{name} must have non-negative entries, got: {dims}")
 
-    return dims
+    return dim_map
 
 
-def parse_coverage(config: Dict[str, Any], n_vertices: int) -> Tuple[List[int], List[int]]:
-    """Parse coverage specification into ambient and target dimension vectors."""
+def parse_coverage(config: Dict[str, Any], n_vertices: int) -> Tuple[Dict[int, int], Dict[int, int]]:
+    """Parse coverage specification into ambient and target dimension maps."""
     coverage = config["coverage"]
     ambient_spec = coverage.get("ambient_dim")
     target_spec = coverage.get("target_dim")
