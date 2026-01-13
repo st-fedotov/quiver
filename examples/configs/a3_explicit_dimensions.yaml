@@ -1,0 +1,23 @@
+# A3 quiver with explicit ambient and target dimension vectors
+
+name: a3_explicit_dimensions
+type: An
+
+quiver:
+  name: A3
+  vertices: [0, 1, 2]
+  arrows:
+    - [0, 1, a01]
+    - [1, 2, a12]
+
+coverage:
+  # Dimensions are specified per vertex in order 0..n-1
+  ambient_dim: [2, 3, 2]
+  target_dim: [1, 2, 1]
+
+runtime:
+  output_dir: ./results
+  workers: 32
+  hilbert_workers: 32
+  r_max: 3
+  gc_heap_size: 16G

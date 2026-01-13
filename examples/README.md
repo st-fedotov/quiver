@@ -22,6 +22,12 @@ This directory contains example scripts and configurations for running quiver an
    curl -O https://raw.githubusercontent.com/st-fedotov/quiver/pre-launch-fix/examples/run_analysis.py
    ```
 
+   If you want to provide explicit dimension vectors instead of projective/injective
+   multiplicities, download the alternative script:
+   ```bash
+   curl -O https://raw.githubusercontent.com/st-fedotov/quiver/pre-launch-fix/examples/run_analysis_dimensions.py
+   ```
+
 3. **Create your config file** (or download an example):
    ```bash
    curl -O https://raw.githubusercontent.com/st-fedotov/quiver/pre-launch-fix/examples/configs/a3_sink.yaml
@@ -176,6 +182,14 @@ runtime:
   hom_prime: 107            # Prime for Hom computation (D_n only)
 ```
 
+If you are using `run_analysis_dimensions.py`, provide explicit dimension vectors instead:
+
+```yaml
+coverage:
+  ambient_dim: [2, 3, 2]
+  target_dim: [1, 2, 1]
+```
+
 The bulk of our experiments were done on a [Nebius](https://nebius.com/)' virtual machine with 128 CPU and 512Gb RAM. Depending on the memory requirements, we used between 30 and 120 parallel computational streams. Though the default `r_max` is 3, we recommend decreasing it for compute-intensive tasks.
 
 ## Quiver Types and Vertex Numbering
@@ -217,6 +231,7 @@ Arrow orientations can be arbitrary.
 
 - `configs/a3_sink.yaml` - A3 sink quiver: `0 -> 1 <- 2` with uniform coverage (1 of each P and I)
 - `configs/a3_custom_coverage.yaml` - A3 quiver with per-vertex multiplicities (e.g., `P_0 + 2*P_1 + P_2`)
+- `configs/a3_explicit_dimensions.yaml` - A3 quiver with explicit ambient/target dimension vectors
 - `configs/d4.yaml` - D4 quiver: `0 -> 1, 1 -> 2, 1 -> 3` with uniform coverage
 
 ## Output Structure
