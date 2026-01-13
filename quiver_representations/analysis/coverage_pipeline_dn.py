@@ -23,7 +23,7 @@ from ..batch.hilbert import write_hilbert_batch, collect_hilbert_results
 
 
 def process_coverage_dn(Q, F, coverage_name, ambient_dim, target_dim, output_dir,
-                        workers, r_max, hilbert_workers, gc_heap_size, hom_prime=107):
+                        workers, r_max, hilbert_workers, gc_heap_size, hom_prime=107, check_hilbert=True):
     """
     Process a single D_n coverage vector: enumerate jobs, run RAD, build poset, check conjectures, compute Hilbert functions.
 
@@ -39,6 +39,7 @@ def process_coverage_dn(Q, F, coverage_name, ambient_dim, target_dim, output_dir
         hilbert_workers: number of workers for parallel Hilbert computation
         gc_heap_size: GC initial heap size for Macaulay2 (e.g., "20G")
         hom_prime: prime p for GF(p) in Hom computations (default: 107)
+        check_hilbert: whether to compute Hilbert functions (default: True)
 
     Returns:
         coverage_dir: Path to the coverage directory
@@ -157,126 +158,129 @@ def process_coverage_dn(Q, F, coverage_name, ambient_dim, target_dim, output_dir
         import traceback
         traceback.print_exc()
 
-    # Step 7: Compute Hilbert functions
-    print(f"[{coverage_name}] Step 7: Computing Hilbert functions...")
+    # Step 7: Compute Hilbert functions (optional)
+    if check_hilbert:
+        print(f"[{coverage_name}] Step 7: Computing Hilbert functions...")
 
-    # Write Hilbert batch jobs to a subdirectory within coverage_dir
-    hilbert_batch_dir = coverage_dir / "batch_hilbert"
-    batch_rad_dir = coverage_dir / "batch_rad"
-    try:
-        write_hilbert_batch(source=str(batch_rad_dir), dest=str(hilbert_batch_dir), r_max=r_max)
-        print(f"[{coverage_name}] Hilbert batch jobs written to {hilbert_batch_dir}.")
-    except Exception as e:
-        print(f"[{coverage_name}] ERROR: Failed to write Hilbert batch: {e}")
-        raise
+        # Write Hilbert batch jobs to a subdirectory within coverage_dir
+        hilbert_batch_dir = coverage_dir / "batch_hilbert"
+        batch_rad_dir = coverage_dir / "batch_rad"
+        try:
+            write_hilbert_batch(source=str(batch_rad_dir), dest=str(hilbert_batch_dir), r_max=r_max)
+            print(f"[{coverage_name}] Hilbert batch jobs written to {hilbert_batch_dir}.")
+        except Exception as e:
+            print(f"[{coverage_name}] ERROR: Failed to write Hilbert batch: {e}")
+            raise
 
-    # Copy run_all_parallel_hf.sh to hilbert batch directory
-    main_hf_script = Path("run_all_parallel_hf.sh")
-    if main_hf_script.exists():
-        shutil.copy(str(main_hf_script), str(hilbert_batch_dir / "run_all_parallel_hf.sh"))
+        # Copy run_all_parallel_hf.sh to hilbert batch directory
+        main_hf_script = Path("run_all_parallel_hf.sh")
+        if main_hf_script.exists():
+            shutil.copy(str(main_hf_script), str(hilbert_batch_dir / "run_all_parallel_hf.sh"))
 
-    # Set NUM_WORKERS environment variable and run the script
-    env = os.environ.copy()
-    env["NUM_WORKERS"] = str(hilbert_workers)
-    env["GC_INITIAL_HEAP_SIZE"] = gc_heap_size
+        # Set NUM_WORKERS environment variable and run the script
+        env = os.environ.copy()
+        env["NUM_WORKERS"] = str(hilbert_workers)
+        env["GC_INITIAL_HEAP_SIZE"] = gc_heap_size
 
-    result = subprocess.run(
-        ["bash", "run_all_parallel_hf.sh"],
-        cwd=str(hilbert_batch_dir),
-        env=env
-    )
-    # Note: parallel returns non-zero if ANY job fails, which is acceptable
-    # Only fail if the script itself failed to run (e.g., no joblist created)
-    joblist_file = hilbert_batch_dir / "hilbert_joblist.txt"
-    if result.returncode != 0:
-        if not joblist_file.exists():
-            print(f"[{coverage_name}] ERROR: Script failed completely (no joblist created)")
-            raise RuntimeError(f"Hilbert script failed with return code {result.returncode}")
-        else:
-            print(f"[{coverage_name}] WARNING: Some individual Hilbert jobs failed (exit code {result.returncode})")
-    print(f"[{coverage_name}] Hilbert computations completed.")
-
-    # Collect Hilbert results into consolidated CSV
-    print(f"[{coverage_name}] Collecting Hilbert results...")
-    hilbert_consolidated_path = coverage_dir / "hilbert_results.csv"
-
-    try:
-        collect_hilbert_results(
-            archive_path=str(hilbert_batch_dir),
-            output_csv=str(hilbert_consolidated_path)
+        result = subprocess.run(
+            ["bash", "run_all_parallel_hf.sh"],
+            cwd=str(hilbert_batch_dir),
+            env=env
         )
-        print(f"[{coverage_name}] Hilbert results collected to {hilbert_consolidated_path}")
-    except Exception as e:
-        print(f"[{coverage_name}] WARNING: Failed to collect Hilbert results: {e}")
+        # Note: parallel returns non-zero if ANY job fails, which is acceptable
+        # Only fail if the script itself failed to run (e.g., no joblist created)
+        joblist_file = hilbert_batch_dir / "hilbert_joblist.txt"
+        if result.returncode != 0:
+            if not joblist_file.exists():
+                print(f"[{coverage_name}] ERROR: Script failed completely (no joblist created)")
+                raise RuntimeError(f"Hilbert script failed with return code {result.returncode}")
+            else:
+                print(f"[{coverage_name}] WARNING: Some individual Hilbert jobs failed (exit code {result.returncode})")
+        print(f"[{coverage_name}] Hilbert computations completed.")
 
-    # Check Hilbert sequence identity hypothesis
-    print(f"[{coverage_name}] Checking Hilbert sequence identity hypothesis...")
+        # Collect Hilbert results into consolidated CSV
+        print(f"[{coverage_name}] Collecting Hilbert results...")
+        hilbert_consolidated_path = coverage_dir / "hilbert_results.csv"
 
-    try:
-        # Read parsed.csv to identify jobs where ALL irred components have dimension generic_dim
-        target_jobs = set()  # task_ids (as integers)
-        with open(parsed_csv_path, 'r') as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                irred_dims_str = row.get('irred_dims', '').strip()
-                if irred_dims_str:
-                    dims = [int(x) for x in irred_dims_str.split()]
-                    # Check if all components have dimension generic_dim
-                    if dims and all(d == generic_dim for d in dims):
-                        target_jobs.add(int(row['task']))
+        try:
+            collect_hilbert_results(
+                archive_path=str(hilbert_batch_dir),
+                output_csv=str(hilbert_consolidated_path)
+            )
+            print(f"[{coverage_name}] Hilbert results collected to {hilbert_consolidated_path}")
+        except Exception as e:
+            print(f"[{coverage_name}] WARNING: Failed to collect Hilbert results: {e}")
 
-        # Read Hilbert sequences from hf.csv files in the batch_hilbert directory
-        hilbert_jobs_dir = hilbert_batch_dir / "jobs"
-        hilbert_sequences = {}
+        # Check Hilbert sequence identity hypothesis
+        print(f"[{coverage_name}] Checking Hilbert sequence identity hypothesis...")
 
-        for job_dir in hilbert_jobs_dir.iterdir():
-            if not job_dir.is_dir():
-                continue
-
-            # Extract original job ID from folder name (format: "000__hf")
-            job_id_str = job_dir.name.split("__")[0]
-            job_id = int(job_id_str)  # Convert to int to match task IDs
-
-            if job_id not in target_jobs:
-                continue
-
-            hf_csv = job_dir / "hf.csv"
-            if not hf_csv.exists():
-                print(f"[{coverage_name}] WARNING: Missing {hf_csv}")
-                continue
-
-            # Read all HF values into a sequence (sorted by degree)
-            hf_values = []
-            with open(hf_csv, 'r') as f:
+        try:
+            # Read parsed.csv to identify jobs where ALL irred components have dimension generic_dim
+            target_jobs = set()  # task_ids (as integers)
+            with open(parsed_csv_path, 'r') as f:
                 reader = csv.DictReader(f)
                 for row in reader:
-                    hf_values.append(int(row['hf']))
+                    irred_dims_str = row.get('irred_dims', '').strip()
+                    if irred_dims_str:
+                        dims = [int(x) for x in irred_dims_str.split()]
+                        # Check if all components have dimension generic_dim
+                        if dims and all(d == generic_dim for d in dims):
+                            target_jobs.add(int(row['task']))
 
-            hilbert_sequences[job_id] = tuple(hf_values)
+            # Read Hilbert sequences from hf.csv files in the batch_hilbert directory
+            hilbert_jobs_dir = hilbert_batch_dir / "jobs"
+            hilbert_sequences = {}
 
-        # Check if all sequences are identical
-        unique_sequences = set(hilbert_sequences.values())
-        all_identical = (len(unique_sequences) <= 1)
+            for job_dir in hilbert_jobs_dir.iterdir():
+                if not job_dir.is_dir():
+                    continue
 
-        # Write conjecture result
-        conj3_path = reports_dir / "conj3_hilbert.csv"
-        with open(conj3_path, 'w', newline='') as f:
-            writer = csv.writer(f)
-            writer.writerow(['hypothesis', 'result', 'num_jobs', 'unique_sequences'])
-            writer.writerow([
-                'All modules with irred_dims=[generic_dim] have identical Hilbert sequences',
-                'PASS' if all_identical else 'FAIL',
-                len(target_jobs),
-                len(unique_sequences)
-            ])
+                # Extract original job ID from folder name (format: "000__hf")
+                job_id_str = job_dir.name.split("__")[0]
+                job_id = int(job_id_str)  # Convert to int to match task IDs
 
-        print(f"[{coverage_name}] Hilbert hypothesis check: {'PASS' if all_identical else 'FAIL'}")
-        print(f"[{coverage_name}] Target jobs with irred_dims=[{generic_dim}]: {len(target_jobs)}")
-        print(f"[{coverage_name}] Unique Hilbert sequences found: {len(unique_sequences)}")
-        print(f"[{coverage_name}] Results written to {conj3_path}")
+                if job_id not in target_jobs:
+                    continue
 
-    except Exception as e:
-        print(f"[{coverage_name}] WARNING: Hilbert hypothesis check failed: {e}")
+                hf_csv = job_dir / "hf.csv"
+                if not hf_csv.exists():
+                    print(f"[{coverage_name}] WARNING: Missing {hf_csv}")
+                    continue
+
+                # Read all HF values into a sequence (sorted by degree)
+                hf_values = []
+                with open(hf_csv, 'r') as f:
+                    reader = csv.DictReader(f)
+                    for row in reader:
+                        hf_values.append(int(row['hf']))
+
+                hilbert_sequences[job_id] = tuple(hf_values)
+
+            # Check if all sequences are identical
+            unique_sequences = set(hilbert_sequences.values())
+            all_identical = (len(unique_sequences) <= 1)
+
+            # Write conjecture result
+            conj3_path = reports_dir / "conj3_hilbert.csv"
+            with open(conj3_path, 'w', newline='') as f:
+                writer = csv.writer(f)
+                writer.writerow(['hypothesis', 'result', 'num_jobs', 'unique_sequences'])
+                writer.writerow([
+                    'All modules with irred_dims=[generic_dim] have identical Hilbert sequences',
+                    'PASS' if all_identical else 'FAIL',
+                    len(target_jobs),
+                    len(unique_sequences)
+                ])
+
+            print(f"[{coverage_name}] Hilbert hypothesis check: {'PASS' if all_identical else 'FAIL'}")
+            print(f"[{coverage_name}] Target jobs with irred_dims=[{generic_dim}]: {len(target_jobs)}")
+            print(f"[{coverage_name}] Unique Hilbert sequences found: {len(unique_sequences)}")
+            print(f"[{coverage_name}] Results written to {conj3_path}")
+
+        except Exception as e:
+            print(f"[{coverage_name}] WARNING: Hilbert hypothesis check failed: {e}")
+    else:
+        print(f"[{coverage_name}] Step 7: Skipped (check_hilbert=False)")
 
     print(f"[{coverage_name}] Processing complete.\n")
     return coverage_dir
