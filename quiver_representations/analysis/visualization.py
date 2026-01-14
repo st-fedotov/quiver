@@ -59,7 +59,14 @@ def visualize_degeneracy_dag(
       - {out_base}.dot
       - {out_base}.svg (or .pdf), if Graphviz 'dot' is available
 
+    Vertex coloring (fill):
+      - RED (light) for vertices with empty irred_dims_list.
+      - BLUE (light) for super cool vertices: irred_dims_list exactly [magic_number].
+      - MAGENTA (light) for cool but not super cool: irred_dims_list = k*[magic_number] with k > 1.
+      - default (slate) otherwise.
+
     Edge coloring:
+      - RED      iff BOTH endpoints have empty irred_dims_list.
       - BLUE     iff BOTH endpoints have irred_dims_list exactly [magic_number].
       - MAGENTA  iff BOTH endpoints have irred_dims_list = k*[magic_number], l*[magic_number]
                   with at least one of k or l > 1.
@@ -82,8 +89,23 @@ def visualize_degeneracy_dag(
     def exactly_magic(lst):
         return isinstance(lst, list) and len(lst) == 1 and int(lst[0]) == magic_number
 
+    def is_empty(lst):
+        return not lst or len(lst) == 0
+
     all_magic_t    = {jid: all_magic(geom[jid]["irred_dims_list"])    for jid in ids}
     exactly_magic_t= {jid: exactly_magic(geom[jid]["irred_dims_list"])for jid in ids}
+    empty_irred_t  = {jid: is_empty(geom[jid]["irred_dims_list"])     for jid in ids}
+
+    # Vertex fill colors based on type
+    def get_node_fillcolor(jid):
+        if empty_irred_t[jid]:
+            return "#fecaca"  # red-200 for empty irred_dims
+        elif exactly_magic_t[jid]:
+            return "#bfdbfe"  # blue-200 for super cool
+        elif all_magic_t[jid]:
+            return "#f5d0fe"  # fuchsia-200 for cool but not super cool
+        else:
+            return "#f1f5f9"  # slate-100 default
 
     # ---- assemble DOT via pygraphviz OR pydot ----
     graph_attrs = {
@@ -136,18 +158,21 @@ def visualize_degeneracy_dag(
         for k, v in edge_attrs.items():
             A.edge_attr[k] = v
 
-        # nodes
+        # nodes with conditional fill colors
         for jid in ids:
-            A.add_node(jid, label=labels[jid])
+            A.add_node(jid, label=labels[jid], fillcolor=get_node_fillcolor(jid))
 
         # edges (Hasse), with conditional styling:
-        # 1) both all-magic? -> blue if both exactly_magic else magenta
-        # 2) otherwise default
+        # 1) both empty_irred? -> red
+        # 2) both all-magic? -> blue if both exactly_magic else magenta
+        # 3) otherwise default
         for u in ids:
             for v in adj.get(u, []):
                 if u == v:
                     continue
-                if all_magic_t[u] and all_magic_t[v]:
+                if empty_irred_t[u] and empty_irred_t[v]:
+                    A.add_edge(u, v, color="red", penwidth="1.8")
+                elif all_magic_t[u] and all_magic_t[v]:
                     if exactly_magic_t[u] and exactly_magic_t[v]:
                         A.add_edge(u, v, color="blue", penwidth="1.8")
                     else:
@@ -180,12 +205,15 @@ def visualize_degeneracy_dag(
                 f.write(",".join(f'{k}="{v}"' for k, v in edge_attrs.items()))
                 f.write("];\n")
                 for jid in ids:
-                    f.write(f'  {jid} [label="{labels[jid]}"];\n')
+                    fillcolor = get_node_fillcolor(jid)
+                    f.write(f'  {jid} [label="{labels[jid]}", fillcolor="{fillcolor}"];\n')
                 for u in ids:
                     for v in adj.get(u, []):
                         if u == v:
                             continue
-                        if all_magic_t[u] and all_magic_t[v]:
+                        if empty_irred_t[u] and empty_irred_t[v]:
+                            f.write(f'  {u} -> {v} [color="red", penwidth="1.8"];\n')
+                        elif all_magic_t[u] and all_magic_t[v]:
                             if exactly_magic_t[u] and exactly_magic_t[v]:
                                 f.write(f'  {u} -> {v} [color="blue", penwidth="1.8"];\n')
                             else:
@@ -204,12 +232,13 @@ def visualize_degeneracy_dag(
         g = pydot.Dot(graph_type="digraph")
         for k, v in graph_attrs.items():
             g.set(k, v)
-        # nodes
+        # nodes with conditional fill colors
         for jid in ids:
             node = pydot.Node(str(jid))
             node.set("label", labels[jid])
             for k, v in node_attrs.items():
                 node.set(k, v)
+            node.set("fillcolor", get_node_fillcolor(jid))
             g.add_node(node)
         # edges with conditional styling
         for u in ids:
@@ -217,16 +246,22 @@ def visualize_degeneracy_dag(
                 if u == v:
                     continue
                 e = pydot.Edge(str(u), str(v))
-                if all_magic_t[u] and all_magic_t[v]:
+                styled = False
+                if empty_irred_t[u] and empty_irred_t[v]:
+                    e.set("color", "red")
+                    e.set("penwidth", "1.8")
+                    styled = True
+                elif all_magic_t[u] and all_magic_t[v]:
                     if exactly_magic_t[u] and exactly_magic_t[v]:
                         e.set("color", "blue")
                         e.set("penwidth", "1.8")
                     else:
                         e.set("color", "magenta")
                         e.set("penwidth", "1.8")
+                    styled = True
                 for k, v2 in edge_attrs.items():
                     # don't overwrite color/penwidth if set
-                    if k in ("color", "penwidth") and (all_magic_t[u] and all_magic_t[v]):
+                    if k in ("color", "penwidth") and styled:
                         continue
                     e.set(k, v2)
                 g.add_edge(e)
