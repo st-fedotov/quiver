@@ -12,6 +12,12 @@ set -euo pipefail
 
 NUM_WORKERS=${NUM_WORKERS:-64}
 
+# Optional: halt all jobs if one fails (set HALT_ON_FAIL=1 to enable)
+HALT_OPT=""
+if [ "${HALT_ON_FAIL:-}" = "1" ]; then
+    HALT_OPT="--halt now,fail=1"
+fi
+
 # Build a stable list of jobs
 find jobs -type f -name 'rad.m2' -printf '%h\n' | sort -V > joblist.txt
 
@@ -23,7 +29,7 @@ fi
 echo "Found $(wc -l < joblist.txt) jobs, running with $NUM_WORKERS workers"
 
 # Run jobs in parallel
-parallel -j "$NUM_WORKERS" --joblog run.log --eta '
+parallel -j "$NUM_WORKERS" --joblog run.log --eta $HALT_OPT '
   dir={};
   echo "START dir=$dir pid=$$ t=$(date -Is)" | tee "$dir/parallel.meta"
 
