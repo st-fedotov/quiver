@@ -271,6 +271,32 @@ class Quiver:
         plt.tight_layout()
         plt.show()
 
+    def euler_form(self, d, e) -> int:
+        """
+        Compute the Euler form <d, e> of two dimension vectors.
+
+            <d, e> = sum_{v in Q_0} d(v)*e(v) - sum_{a: s->t in Q_1} d(s)*e(t)
+
+        Args:
+            d: Dimension vector (dict vertex_id->int, or list/tuple indexed by
+               sorted vertex IDs)
+            e: Dimension vector (same formats as d)
+
+        Returns:
+            Integer value of the Euler form.
+        """
+        verts = sorted(self.vertices.keys())
+        if isinstance(d, (list, tuple)):
+            d = {verts[i]: d[i] for i in range(len(d))}
+        if isinstance(e, (list, tuple)):
+            e = {verts[i]: e[i] for i in range(len(e))}
+
+        val = sum(d.get(v, 0) * e.get(v, 0) for v in verts)
+        for arrow_data in self.arrows.values():
+            s, t = arrow_data["source"], arrow_data["target"]
+            val -= d.get(s, 0) * e.get(t, 0)
+        return val
+
     def to_dict(self) -> Dict:
         """Convert the quiver to a dictionary for serialization."""
         return {
