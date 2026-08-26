@@ -324,8 +324,8 @@ class QuiverGrassmannian:
         k = int(self.target_dimensions.get(tail, 0))
         l = int(self.target_dimensions.get(head, 0))
 
-        if k == 0 or l == 0:
-            # print(f"[relations] skip path {path.arrows}: k={k}, l={l}.")
+        if k == 0:
+            # The zero subspace at the tail maps into every head subspace.
             out: list["PluckerPolynomial"] = []
         elif isinstance(path.matrix, ZeroMap):
             # print(f"[relations] skip path {path.arrows}: composite is ZeroMap.")
@@ -333,10 +333,8 @@ class QuiverGrassmannian:
         else:
             from itertools import combinations
 
-            G_tail = self.vertex_grassmannians[tail]
-            G_head = self.vertex_grassmannians[head]
-            m = int(G_tail.n)   # ambient at tail
-            n = int(G_head.n)   # ambient at head
+            m = int(self.ambient_module.spaces[tail])
+            n = int(self.ambient_module.spaces[head])
             A = path.matrix     # identity when len==0 and tail==head
 
             polys: list["PluckerPolynomial"] = []
@@ -350,8 +348,11 @@ class QuiverGrassmannian:
                     # print(f"path={path.arrows}, A = {A}")
 
                     # --- coalescing accumulator over commutative monomials ---
-                    # key: (a.key(), b.key()) with a <= b in your canonical order
-                    # val: [coef_sum, a_obj, b_obj]  (store objs to avoid reconstructing from keys)
+                    # A zero-dimensional head has the single empty minor p_empty = 1,
+                    # so its incidence equations are linear in the tail coordinates.
+                    # Otherwise, retain the usual bilinear Plucker monomials.
+                    # key: tuple of canonically ordered variable keys
+                    # val: [coefficient sum, tuple of variable objects]
                     acc: dict[tuple, list] = {}
 
                     for r, j_r in enumerate(J):
@@ -380,26 +381,23 @@ class QuiverGrassmannian:
                             p_right = tuple(x for x in J if x != j_r)  # size l @ head
 
                             a = PluckerVar('p', tail, p_left)
-                            b = PluckerVar('p', head, p_right)
-
-                            # canonicalize factor order (commutative product)
-                            if a.key() <= b.key():
-                                mk = (a.key(), b.key())
-                                left_var, right_var = a, b
+                            if l == 0:
+                                monomial = (a,)
                             else:
-                                mk = (b.key(), a.key())
-                                left_var, right_var = b, a
+                                b = PluckerVar('p', head, p_right)
+                                monomial = tuple(sorted((a, b), key=lambda var: var.key()))
+                            mk = tuple(var.key() for var in monomial)
 
                             if mk in acc:
                                 acc[mk][0] += coef
                             else:
-                                acc[mk] = [coef, left_var, right_var]
+                                acc[mk] = [coef, monomial]
 
                     # Emit a relation only if nonzero after coalescing
                     terms = []
-                    for (_ak, _bk), (c, va, vb) in acc.items():
+                    for _monomial_key, (c, monomial) in acc.items():
                         if abs(c) > EPS_PRUNE:
-                            terms.append((c, (va, vb)))
+                            terms.append((c, monomial))
 
                     if terms:
                         meta = {
