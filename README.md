@@ -6,6 +6,7 @@ A Python library for computational experiments with quiver representations and q
 
 - **Quivers and modules**: Create custom quivers and representations over the field of complex numbers or over finite fields (based on the `galois` library); infer simple, projective, and injective modules. For now, the library only supports quivers without oriented cycles.
 - **Module and morphism operations**: Compute direct sums, kernels, images, radicals and socles, projective covers and injective hulls. Find a basis of **Hom_Q(M, N)** for given **M** and **N**. We recommed to use this functionality only over finite fields - over **C** every matrix is virtually full-rank due to errors in floating-point computations, so correctness isn't guaranteed.
+- **Acyclic affine A/D pipelines**: Recognize extended ADE diagrams, compute the null root, Tits form and defect, enumerate bounded roots, and build complete bounded `rational_jordan` catalogues and Krull-Schmidt bags for acyclic affine A and D quivers over prime fields. Finite-field Hom computations and characteristic-zero Grassmannian jobs remain separate.
 - **Quiver Grassmannians**: Create quiver Grassmannians. Infer equations cutting a quiver Grassmannian in a multi-projective space, as described in [this paper](https://arxiv.org/pdf/1607.01058).
 - **Degeneration posets**: Construct and visualize partial orders on modules with the same dimension vector given by the relation "**M** has **N** in the closure of its orbit".
 - **Hilbert functions**: Compute Hilbert functions for a quiver Grassmannian

@@ -24,6 +24,15 @@ from .poset_dn import (
     report_local_minima_dn,
 )
 
+from .poset_kronecker import (
+    kronecker_hom_profile,
+    write_kronecker_hom_poset,
+)
+
+from .poset_affine import (
+    write_affine_hom_poset,
+)
+
 from .conjectures import (
     read_ranks_csv_strict,
     read_edges_csv_strict,
@@ -47,6 +56,11 @@ from .coverage_pipeline_dn import (
     process_coverage_dn,
 )
 
+from .coverage_pipeline_affine import (
+    prepare_affine_ad_coverage,
+    process_coverage_affine_ad,
+)
+
 __all__ = [
     "hom_interval",
     "hom_interval_to_bag",
@@ -55,6 +69,9 @@ __all__ = [
     "build_dir_edges",
     "write_rank_poset_from_jobs_Dn",
     "report_local_minima_dn",
+    "kronecker_hom_profile",
+    "write_kronecker_hom_poset",
+    "write_affine_hom_poset",
     "read_ranks_csv_strict",
     "read_edges_csv_strict",
     "read_parsed_csv_strict",
@@ -66,4 +83,6 @@ __all__ = [
     "visualize_degeneracy_dag",
     "process_coverage",
     "process_coverage_dn",
+    "prepare_affine_ad_coverage",
+    "process_coverage_affine_ad",
 ]

@@ -8,6 +8,15 @@ from .quiver import Quiver
 from .field import Field, FiniteField, ComplexNumbers, ZeroMap
 from .module import Module
 from .morphism import Morphism
+from .reflection import reflect_dimension_vector
+from .affine import (
+    AffineQuiverInfo,
+    affine_defect,
+    affine_tits_value,
+    classify_affine_quiver,
+    enumerate_affine_real_roots_bounded,
+    underlying_edge_multiplicities,
+)
 
 # Grassmannian exports
 from .grassmannians import (
@@ -55,6 +64,31 @@ from .interval_modules import (
     enumerate_Dn_bags_from_coverage_iter,
     enumerate_Dn_bags_from_coverage,
     make_rad_jobs_for_Dn,
+    # Kronecker / affine A1
+    INFINITY,
+    KroneckerBag,
+    KroneckerIndec,
+    KroneckerJob,
+    KroneckerKind,
+    KroneckerRegularMode,
+    enumerate_kronecker_bags_from_coverage,
+    enumerate_kronecker_bags_from_coverage_iter,
+    enumerate_kronecker_indecs_bounded,
+    form_kronecker_module_from_bag_explicit,
+    kronecker_vertices_and_arrows,
+    lift_kronecker_bag_to_characteristic_zero,
+    make_kronecker_jobs,
+    make_kronecker_quiver,
+    rational_jordan_parameters,
+    write_batch_rad_from_kronecker_jobs,
+    # Affine A/D
+    AffineBag,
+    AffineIndecRecord,
+    AffineJob,
+    enumerate_affine_ad_indecs_bounded,
+    enumerate_affine_bags_from_records_iter,
+    make_affine_ad_jobs,
+    write_batch_rad_from_affine_jobs,
 )
 
 # Batch processing exports
@@ -82,6 +116,12 @@ from .analysis import (
     # Poset D_n
     write_rank_poset_from_jobs_Dn,
     report_local_minima_dn,
+    # Poset Kronecker
+    kronecker_hom_profile,
+    write_kronecker_hom_poset,
+    write_affine_hom_poset,
+    prepare_affine_ad_coverage,
+    process_coverage_affine_ad,
     # Conjectures - CSV readers
     read_ranks_csv_strict,
     read_edges_csv_strict,
@@ -117,6 +157,13 @@ __all__ = [
     "Module",
     "ZeroMap",
     "Morphism",
+    "reflect_dimension_vector",
+    "AffineQuiverInfo",
+    "affine_defect",
+    "affine_tits_value",
+    "classify_affine_quiver",
+    "enumerate_affine_real_roots_bounded",
+    "underlying_edge_multiplicities",
 
     # Grassmannians
     "Grassmannian",
@@ -167,6 +214,33 @@ __all__ = [
     "enumerate_Dn_bags_from_coverage",
     "make_rad_jobs_for_Dn",
 
+    # Kronecker / affine A1
+    "INFINITY",
+    "KroneckerBag",
+    "KroneckerIndec",
+    "KroneckerJob",
+    "KroneckerKind",
+    "KroneckerRegularMode",
+    "enumerate_kronecker_bags_from_coverage",
+    "enumerate_kronecker_bags_from_coverage_iter",
+    "enumerate_kronecker_indecs_bounded",
+    "form_kronecker_module_from_bag_explicit",
+    "kronecker_vertices_and_arrows",
+    "lift_kronecker_bag_to_characteristic_zero",
+    "make_kronecker_jobs",
+    "make_kronecker_quiver",
+    "rational_jordan_parameters",
+    "write_batch_rad_from_kronecker_jobs",
+
+    # Affine A/D
+    "AffineBag",
+    "AffineIndecRecord",
+    "AffineJob",
+    "enumerate_affine_ad_indecs_bounded",
+    "enumerate_affine_bags_from_records_iter",
+    "make_affine_ad_jobs",
+    "write_batch_rad_from_affine_jobs",
+
     # Batch processing
     "write_batch_rad_from_triples",
     "parse_quiver_jobs_rad",
@@ -189,6 +263,11 @@ __all__ = [
     "build_dir_edges",
     "write_rank_poset_from_jobs_Dn",
     "report_local_minima_dn",
+    "kronecker_hom_profile",
+    "write_kronecker_hom_poset",
+    "write_affine_hom_poset",
+    "prepare_affine_ad_coverage",
+    "process_coverage_affine_ad",
 
     # Analysis - Conjectures
     "read_ranks_csv_strict",
