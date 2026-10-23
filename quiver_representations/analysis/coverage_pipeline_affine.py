@@ -27,6 +27,7 @@ def prepare_affine_ad_coverage(
     regular_mode="rational_jordan",
     random_seed=0,
     max_attempts=50000,
+    irred_dims_only=False,
 ):
     """Create the finite Hom catalogue and the characteristic-zero RAD batch."""
     coverage_dir = Path(output_dir) / coverage_name
@@ -46,6 +47,7 @@ def prepare_affine_ad_coverage(
         batch_root=str(coverage_dir),
         run_id="batch_rad",
         max_path_len_full_default=10,
+        irred_dims_only=irred_dims_only,
     )
     poset_dir = write_affine_hom_poset(
         jobs,
@@ -78,8 +80,11 @@ def process_coverage_affine_ad(
     random_seed=0,
     max_attempts=50000,
     check_hilbert=False,
+    irred_dims_only=False,
 ):
     """Run the existing QQ RAD pipeline for one affine A/D coverage."""
+    if irred_dims_only and check_hilbert:
+        raise ValueError("Hilbert computations require the full diagnostic emitter; set check_hilbert=False for irred_dims_only.")
     if getattr(characteristic_zero_field, "characteristic", None) != 0:
         raise ValueError("Affine Grassmannian computations must use characteristic zero.")
     if check_hilbert:
@@ -95,6 +100,7 @@ def process_coverage_affine_ad(
         regular_mode=regular_mode,
         random_seed=random_seed,
         max_attempts=max_attempts,
+        irred_dims_only=irred_dims_only,
     )
     coverage_dir = prepared["coverage_dir"]
     batch_dir = prepared["batch_dir"]

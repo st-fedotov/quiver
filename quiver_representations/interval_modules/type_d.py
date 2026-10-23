@@ -315,6 +315,7 @@ def write_batch_rad_from_dn_bags(
     overwrite_outputs: bool = False,
     vertex_order: Optional[List[int]] = None,
     prefix: str = "p_",
+    irred_dims_only: bool = False,
 ) -> Path:
     """
     Write batch radicality test jobs for D_n quivers from bags of indecomposables.
@@ -383,5 +384,6 @@ def write_batch_rad_from_dn_bags(
         overwrite_outputs=overwrite_outputs,
         vertex_order=vertex_order,
         prefix=prefix,
+        irred_dims_only=irred_dims_only,
     )
 

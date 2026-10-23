@@ -520,9 +520,53 @@ class QuiverGrassmannian:
         *,
         max_path_len_full: int,
         vertex_order: list[int] | None = None,
+        prefix: str = "p_",
+        script_path: str = "rad.m2",
+        dump_gb: bool = True,
+    ) -> None:
+        """Emit the original full saturated-ideal diagnostic calculation."""
+        self._emit_macaulay2_saturated(
+            max_path_len_full=max_path_len_full,
+            vertex_order=vertex_order,
+            prefix=prefix,
+            script_path=script_path,
+            dump_gb=dump_gb,
+            irred_dims_only=False,
+        )
+
+    def to_macaulay2_irred_dims(
+        self,
+        *,
+        max_path_len_full: int,
+        vertex_order: list[int] | None = None,
+        prefix: str = "p_",
+        script_path: str = "irred_dims.m2",
+    ) -> None:
+        """Emit component dimensions over QQ after blockwise saturation.
+
+        Uses the same all-path equations, ring and projective-coordinate blocks
+        as to_macaulay2_saturated. Only emptiness, irreducibility,
+        equidimensionality and the complete component-dimension lists are
+        reported; connectedness and ideal diagnostics are not computed.
+        """
+        self._emit_macaulay2_saturated(
+            max_path_len_full=max_path_len_full,
+            vertex_order=vertex_order,
+            prefix=prefix,
+            script_path=script_path,
+            dump_gb=False,
+            irred_dims_only=True,
+        )
+
+    def _emit_macaulay2_saturated(
+        self,
+        *,
+        max_path_len_full: int,
+        vertex_order: list[int] | None = None,
         prefix: str = "p_",                 # your existing convention → p_(..., ...)
         script_path: str = "rad.m2",
-        dump_gb: bool = True                # print full GBs before/after saturation
+        dump_gb: bool = True,               # print full GBs before/after saturation
+        irred_dims_only: bool = False,
     ) -> None:
         """
         Production emitter:
@@ -534,6 +578,9 @@ class QuiverGrassmannian:
           • per-vertex saturation (successively by each block B#i)
           • summary (X_EMPTY / X_IRREDUCIBLE / X_EQDIM / X_COMPONENTS / X_CONNECTED)
         Relies on your existing poly_to_m2(P) that renders p_(...).
+        With irred_dims_only, retain all-path equations and blockwise
+        saturation, but compute only emptiness and minimal-prime dimensions.
+        Connectedness and other diagnostics are omitted, not inferred.
         """
 
         # ---------- included vertices ----------
@@ -554,7 +601,7 @@ class QuiverGrassmannian:
             v_blocks += [v for v in included if v not in seen]
 
         # ---------- gather relations ----------
-        rels_len1 = [P for L in self.get_relations_for_all_paths(max_len=1, cache=False).values() for P in L]
+        rels_len1 = [] if irred_dims_only else [P for L in self.get_relations_for_all_paths(max_len=1, cache=False).values() for P in L]
         rels_all  = [P for L in self.get_relations_for_all_paths(max_len=max_path_len_full, cache=False).values() for P in L]
 
 
@@ -629,6 +676,38 @@ class QuiverGrassmannian:
     }};
     """
             )
+
+        if irred_dims_only:
+            emit_gen_list("GensAll", gens_all_m2)
+            lines.append('Ifull = if #GensAll == 0 then ideal 0_R else ideal GensAll;\n')
+            blocks = ["ideal(" + ", ".join(block) + ")" if block else "ideal(1_R)"
+                      for block in block_vars]
+            lines.append("B = {" + ",\n".join(blocks) + "};\n")
+            lines.append(r'''
+needsPackage "MinimalPrimes";
+Ifullsat = Ifull;
+for i from 0 to #B-1 do Ifullsat = saturate(Ifullsat, B#i);
+b2i = b -> if b then 1 else 0;
+isEmptyX = (Ifullsat == ideal(1_R));
+stdio << "X_EMPTY isEmpty=" << b2i isEmptyX << endl;
+if isEmptyX then (
+    stdio << "X_IRREDUCIBLE irreducible=0" << endl;
+    stdio << "X_EQDIM equidimensional=0" << endl;
+    stdio << "X_COMPONENTS num=0 compProjDims={} compAffDims={}" << endl;
+) else (
+    mins = minimalPrimes Ifullsat;
+    affDims = apply(mins, P -> dim(R/P));
+    projDims = apply(affDims, d -> d - degreeLength R);
+    stdio << "X_IRREDUCIBLE irreducible=" << b2i(#mins == 1) << endl;
+    stdio << "X_EQDIM equidimensional=" << b2i(#set projDims == 1) << endl;
+    stdio << "X_COMPONENTS num=" << #mins << " compProjDims=" << toString projDims
+          << " compAffDims=" << toString affDims << endl;
+);
+exit 0;
+''')
+            with open(script_path, "w", encoding="ascii", errors="strict") as fh:
+                fh.write("\n".join(lines))
+            return
 
         emit_gen_list("GensLenLe1", gens_len1_m2)
         lines.append('I1 = if #GensLenLe1 == 0 then ideal 0_R else ideal GensLenLe1;\n')

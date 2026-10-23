@@ -23,7 +23,7 @@ from ..batch.hilbert import write_hilbert_batch, collect_hilbert_results
 
 
 def process_coverage_dn(Q, F, coverage_name, ambient_dim, target_dim, output_dir,
-                        workers, r_max, hilbert_workers, gc_heap_size, hom_prime=107, check_hilbert=True):
+                        workers, r_max, hilbert_workers, gc_heap_size, hom_prime=107, check_hilbert=True, irred_dims_only=False):
     """
     Process a single D_n coverage vector: enumerate jobs, run RAD, build poset, check conjectures, compute Hilbert functions.
 
@@ -44,6 +44,8 @@ def process_coverage_dn(Q, F, coverage_name, ambient_dim, target_dim, output_dir
     Returns:
         coverage_dir: Path to the coverage directory
     """
+    if irred_dims_only and check_hilbert:
+        raise ValueError("Hilbert computations require the full diagnostic emitter; set check_hilbert=False for irred_dims_only.")
     coverage_dir = output_dir / coverage_name
     coverage_dir.mkdir(parents=True, exist_ok=True)
 
@@ -65,6 +67,7 @@ def process_coverage_dn(Q, F, coverage_name, ambient_dim, target_dim, output_dir
         jobs,
         field=F,
         max_path_len_full_default=10,
+        irred_dims_only=irred_dims_only,
     )
     print(f"[{coverage_name}] Batch written to: {batch_dir}")
 

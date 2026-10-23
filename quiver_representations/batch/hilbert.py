@@ -388,6 +388,9 @@ def write_hilbert_batch(
         if not rad_out.exists():
             raise FileNotFoundError(f"{parent_id}: missing {rad_out} (needed to reuse Ifullsat GB)")
 
+        if not any(_RX_GB_HDR.match(line) for line in rad_out.read_text(encoding="utf-8").splitlines()):
+            raise ValueError(f"{parent_id}: missing Ifullsat Groebner basis; Hilbert computations require full diagnostic output.")
+
         gb_lines = parse_ifullsat_gb(rad_out)  # list[str], must be non-empty
 
         if not gb_lines:

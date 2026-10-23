@@ -28,15 +28,19 @@ def write_batch_rad_from_triples(
     msys_no_pathconv: bool = True,
     overwrite_outputs: bool = False,           # kept for compatibility; not used in launcher
     vertex_order: list[int] | None = None,
-    prefix: str = "p_"
+    prefix: str = "p_",
+    irred_dims_only: bool = False,
 ) -> Path:
     """
     For each (Q, M, dim[, max_len_full]) triple:
       - builds QuiverGrassmannian(Q, M, dim)
-      - emits rad.m2 via to_macaulay2_compare_len1_vs_all (stdout only; GB printed)
+      - emits rad.m2 via the full diagnostic or dimensions-only emitter
       - writes manifest.yaml including dim as a YAML mapping
       - writes run_all.sh (printed at the end)
       - creates a ZIP archive of the entire run directory and prints its path
+
+    irred_dims_only omits non-dimensional diagnostics while retaining the
+    same equations and saturation. The default preserves the full report.
     """
     triples = list(triples)
     if not triples:
@@ -85,8 +89,8 @@ def write_batch_rad_from_triples(
 
         # Emit Macaulay2 script for this job
         G = QuiverGrassmannian(M, dim)  # will fail naturally if dim is wrong
-        # G.to_macaulay2_component_counts(
-        G.to_macaulay2_saturated(
+        emitter = G.to_macaulay2_irred_dims if irred_dims_only else G.to_macaulay2_saturated
+        emitter(
             max_path_len_full=mplf,
             vertex_order=vertex_order,
             prefix=prefix,

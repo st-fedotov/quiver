@@ -108,6 +108,7 @@ def write_batch_rad_from_interval_bags_explicit(
     overwrite_outputs: bool = False,
     vertex_order: Optional[List[int]] = None,
     prefix: str = "p_",
+    irred_dims_only: bool = False,
 ) -> Path:
     """
     Write batch jobs using explicit interval construction.
@@ -181,5 +182,6 @@ def write_batch_rad_from_interval_bags_explicit(
           overwrite_outputs=overwrite_outputs,
           vertex_order=vertex_order,
           prefix=prefix,
+          irred_dims_only=irred_dims_only,
       )
 
